@@ -1,0 +1,80 @@
+# Loki 配置文件
+# 用于收集和聚合多个 Injective 节点的日志
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# 查询配置
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+# Schema 配置（存储格式）
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+# Ruler 配置（告警规则，可选）
+ruler:
+  alertmanager_url: http://alertmanager:9093
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+  rule_path: /loki/rules
+  enable_api: true
+
+# 限制配置（防止性能问题）
+limits_config:
+  # 查询限制
+  max_query_length: 720h
+  max_query_parallelism: 16
+  max_query_series: 500
+  
+  # 写入限制
+  ingestion_rate_mb: 16
+  ingestion_burst_size_mb: 32
+  max_streams_per_user: 0
+  max_line_size: 256KB
+  
+  # 保留策略
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  retention_period: 168h  # 7天保留期
+  
+  # 每个租户的限制（如果启用多租户）
+  per_stream_rate_limit: 3MB
+  per_stream_rate_limit_burst: 15MB
+
+# 压缩配置
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem

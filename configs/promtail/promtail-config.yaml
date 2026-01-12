@@ -1,0 +1,97 @@
+# Promtail 配置文件
+# 用于在各个 Injective 节点上收集日志并发送到 Loki
+# 注意：每个节点需要根据实际情况修改 node_id 和日志路径
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+# 记录读取位置，用于断点续传
+positions:
+  filename: /tmp/positions.yaml
+
+# Loki 客户端配置（指向 Loki 服务器）
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    # 如果 Loki 需要认证，可以配置：
+    # bearer_token_file: /path/to/token
+    # basic_auth:
+    #   username: user
+    #   password_file: /path/to/password
+
+# 日志采集配置
+scrape_configs:
+  # Injective 节点日志采集
+  - job_name: injective-node
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: injective-node
+          # 重要：每个节点需要修改 node_id 为唯一标识
+          # 例如：node-1, node-2, node-3 等
+          node_id: local-node
+          # 日志路径（当前机器上的日志文件）
+          __path__: /home/injectived/logs/inj.log
+          # 如果有多个日志文件，可以添加多个配置：
+          # - targets: [localhost]
+          #   labels:
+          #     job: injective-node
+          #     node_id: node-1
+          #     log_type: application
+          #     __path__: /var/log/injective/application.log
+          # - targets: [localhost]
+          #   labels:
+          #     job: injective-node
+          #     node_id: node-1
+          #     log_type: error
+          #     __path__: /var/log/injective/error.log
+    
+    # 管道处理（解析日志格式）
+    pipeline_stages:
+      # 移除 ANSI 颜色码
+      - regex:
+          expression: '\x1b\[[0-9;]*m'
+          replacement: ''
+      
+      # 解析日志级别（INF, ERR, WRN, DBG 等）
+      - regex:
+          expression: '(?P<timestamp>\d{1,2}:\d{2}(?:AM|PM)|\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})\s+(?P<level>INF|ERR|WRN|DBG|FATAL|PANIC)'
+          source: log
+      
+      # 提取级别作为标签
+      - match:
+          selector: '{job="injective-node"}'
+          stages:
+            - regex:
+                expression: '\s+(?P<level>INF|ERR|WRN|DBG|FATAL|PANIC)\s+'
+            - labels:
+                level:
+      
+      # 提取 module 信息（module=xxx）
+      - match:
+          selector: '{job="injective-node"}'
+          stages:
+            - regex:
+                expression: 'module=(?P<module>\w+)'
+            - labels:
+                module:
+      
+      # 标记错误日志
+      - match:
+          selector: '{job="injective-node"}'
+          stages:
+            - regex:
+                expression: '\s+(ERR|FATAL|PANIC)\s+'
+            - labels:
+                has_error: "true"
+
+  # 系统日志采集（可选）
+  # - job_name: system
+  #   static_configs:
+  #     - targets:
+  #         - localhost
+  #       labels:
+  #         job: system
+  #         node_id: node-1
+  #         __path__: /var/log/syslog

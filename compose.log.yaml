@@ -1,0 +1,83 @@
+# Loki 和 Promtail 日志收集服务配置
+# 用于收集多个 Injective 节点的日志
+# 
+# 使用说明：
+# 1. Loki 服务：日志聚合存储服务，提供查询 API
+# 2. Promtail 服务：日志收集代理，部署在各个节点上收集日志
+# 
+# 启动方式：
+#   docker-compose -f compose.log.yaml up -d
+# 
+# 注意：
+# - Promtail 需要在每个 Injective 节点上部署
+# - 每个节点的 Promtail 配置需要修改 node_id 和日志路径
+# - 如果节点不在同一 Docker 网络中，需要修改 Promtail 的 clients.url
+
+services:
+  # Loki - 日志聚合存储服务
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      # HTTP API 端口（查询、推送日志）
+      - "3100:3100"
+      # gRPC 端口（内部通信）
+      - "9096:9096"
+    volumes:
+      # Loki 配置文件
+      - ./configs/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      # 数据持久化（chunks、索引、规则等）
+      - loki-data:/loki
+    networks:
+      - biya-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    # 注意：如果使用告警规则，需要确保 alertmanager 服务在同一个网络中可用
+    # depends_on:
+    #   - alertmanager
+
+  # Promtail - 日志收集代理（本地部署）
+  # 用于收集当前机器上的 ~/.injectived/logs/inj.log 日志
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: promtail
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      # Promtail 配置文件
+      - ./configs/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      # 挂载日志目录（挂载用户主目录下的 injectived 目录）
+      - /home/ubuntu/.injectived/logs:/home/injectived/logs:ro
+      # positions 文件位置
+      - promtail-positions:/tmp
+    networks:
+      - biya-network
+    restart: unless-stopped
+    depends_on:
+      - loki
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9080/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    # 注释说明：实际部署时可以：
+    # 1. 复制这个服务配置，创建 promtail-node-1, promtail-node-2 等
+    # 2. 或者将 Promtail 部署到各个节点上，使用独立的 docker-compose 或 systemd 服务
+    # 3. 如果节点不在同一 Docker 网络，需要修改 clients.url 为 Loki 的公网地址
+
+# 使用外部网络（与主 compose.yaml 一致）
+networks:
+  biya-network:
+    external: true
+    name: biya-backend
+
+# 数据卷
+volumes:
+  # Loki 数据持久化
+  loki-data:
+  # Promtail positions 文件（用于断点续传）
+  promtail-positions:
