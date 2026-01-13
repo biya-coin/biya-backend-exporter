@@ -46,5 +46,7 @@ monitoring:
   prometheus_base_url: "http://prometheus:9090"
   # Alertmanager 地址（使用 Docker Compose 服务名）
   alertmanager_base_url: "http://alertmanager:9093"
+  # Loki 地址（使用 Docker Compose 服务名）
+  loki_base_url: "http://loki:3100"
 
 

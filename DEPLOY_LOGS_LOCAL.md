@@ -90,8 +90,30 @@ curl -s -G "http://localhost:3100/loki/api/v1/query_range" \
   --data-urlencode "end=$(date +%s)000000000" \
   --data-urlencode "limit=10"
 
-#使用 wscat 通过 WebSocket 实时查看日志（需先安装 wscat：npm install -g wscat）
-wscat -c "ws://localhost:3100/loki/api/v1/tail?query={job=\"injective-node\"}&limit=100"
+# 使用 wscat 通过 WebSocket 实时查看日志（推荐，需先安装：npm install -g wscat）
+wscat -c "ws://localhost:3100/loki/api/v1/tail?query=%7Bjob%3D%22injective-node%22%7D&limit=100"
+wscat -c "ws://45.249.245.183:3100/loki/api/v1/tail?query=%7Bjob%3D%22injective-node%22%7D&limit=100"
+
+# 使用 curl 通过 WebSocket 实时查看日志（注意：curl 不支持 ws:// 协议，需使用 http://）
+# 本地测试
+curl --no-buffer \
+  -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: $(echo -n 'test' | base64)" \
+  -H "Host: localhost:3100" \
+  -H "Origin: http://localhost:3100" \
+  "http://localhost:3100/loki/api/v1/tail?query=%7Bjob%3D%22injective-node%22%7D&limit=100"
+
+# 远程服务器（注意：查询参数需要 URL 编码）
+curl --no-buffer \
+  -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: $(echo -n 'test' | base64)" \
+  -H "Host: 45.249.245.183:3100" \
+  -H "Origin: http://45.249.245.183:3100" \
+  "http://45.249.245.183:3100/loki/api/v1/tail?query=%7Bjob%3D%22injective-node%22%7D&limit=100"
 ```
 
 
@@ -122,8 +144,8 @@ const ws = new WebSocket(
   'ws://localhost:3100/loki/api/v1/tail?query={job="injective-node"}&limit=100'
 
 // 使用 wscat 也可以测试 WebSocket 日志流（需要先安装 wscat: npm install -g wscat）
-// 示例命令：
-// wscat -c "ws://localhost:3100/loki/api/v1/tail?query={job=\"injective-node\"}&limit=100"
+// 示例命令（注意：查询参数需要 URL 编码）：
+// wscat -c "ws://localhost:3100/loki/api/v1/tail?query=%7Bjob%3D%22injective-node%22%7D&limit=100"
 );
 
 ws.onopen = () => {

@@ -16,11 +16,21 @@ Grafana 已配置为自动连接到 Prometheus 数据源，用于可视化监控
 
 ### 数据源配置
 
-Prometheus 数据源已通过 provisioning 自动配置：
+已通过 provisioning 自动配置以下数据源：
+
+#### Prometheus 数据源
 - 配置文件位置: `configs/grafana/provisioning/datasources/prometheus.yml`
 - 数据源名称: Prometheus
 - Prometheus 地址: `http://prometheus:9090` (容器内网络)
 - 默认数据源: 是
+
+#### Loki 数据源（日志查询）
+- 配置文件位置: `configs/grafana/provisioning/datasources/loki.yml`
+- 数据源名称: Loki
+- Loki 地址: `http://loki:3100` (容器内网络)
+- 用途: 查询和可视化日志数据
+
+**注意**: 需要先启动 Loki 服务（`docker-compose -f compose.log.yaml up -d`）才能使用 Loki 数据源。
 
 ### 数据持久化
 
@@ -117,7 +127,14 @@ docker volume rm biya-backend-exporter_grafana-data
 docker compose up -d grafana
 ```
 
+## 日志分析页面嵌入
+
+日志分析页面可以通过 Grafana 嵌入到其他页面中。详细说明请参考：
+- [日志分析页面嵌入指南](./LOG_ANALYSIS_EMBED_GUIDE.md)
+- [Grafana iframe 嵌入指南](./IFRAME_EMBED_GUIDE.md)
+
 ## 相关文档
 
 - [Prometheus 配置文档](../prometheus/README.md)
+- [Loki 配置文档](../loki/README.md)
 - [指标说明](../../METRICS.md)

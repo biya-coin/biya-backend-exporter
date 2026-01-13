@@ -12,6 +12,7 @@ import (
 
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/alertmanager"
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/explorer"
+	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/loki"
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/prometheus"
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/stake"
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/tendermint"
@@ -110,6 +111,14 @@ func main() {
 			httpSrv.SetAlertTrendService(alertTrendService)
 			logger.Info("alert trend service enabled")
 		}
+	}
+
+	// 初始化日志统计服务（如果配置了 Loki）
+	if cfg.Monitoring.LokiBaseURL != "" {
+		lokiClient := loki.NewClient(cfg.Monitoring.LokiBaseURL, cfg.HTTPClient.Timeout)
+		logStatsService := server.NewLogStatsService(lokiClient, logger)
+		httpSrv.SetLogStatsService(logStatsService)
+		logger.Info("log stats service enabled", "loki_url", cfg.Monitoring.LokiBaseURL)
 	}
 
 	if err := httpSrv.Start(ctx); err != nil {

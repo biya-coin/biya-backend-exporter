@@ -14,6 +14,7 @@ type Server struct {
 	reg               *metrics.Registry
 	ready             func() bool
 	alertTrendService *AlertTrendService
+	logStatsService   *LogStatsService
 }
 
 func New(listenAddr string, reg *metrics.Registry, ready func() bool) *Server {
@@ -23,6 +24,11 @@ func New(listenAddr string, reg *metrics.Registry, ready func() bool) *Server {
 // SetAlertTrendService 设置告警趋势服务
 func (s *Server) SetAlertTrendService(service *AlertTrendService) {
 	s.alertTrendService = service
+}
+
+// SetLogStatsService 设置日志统计服务
+func (s *Server) SetLogStatsService(service *LogStatsService) {
+	s.logStatsService = service
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -48,6 +54,12 @@ func (s *Server) Start(ctx context.Context) error {
 	// 告警趋势查询接口
 	if s.alertTrendService != nil {
 		mux.HandleFunc("/api/v1/alerts/trend", s.alertTrendService.HandleAlertTrend)
+	}
+
+	// 日志统计查询接口
+	if s.logStatsService != nil {
+		mux.HandleFunc("/api/v1/node-logs/stats", s.logStatsService.HandleLogStats)
+		mux.HandleFunc("/api/v1/node-logs/list", s.logStatsService.HandleLogList)
 	}
 
 	srv := &http.Server{

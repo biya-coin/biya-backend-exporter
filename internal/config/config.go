@@ -91,6 +91,8 @@ type MonitoringConfig struct {
 	PrometheusBaseURL string `json:"prometheus_base_url"`
 	// Alertmanager 地址，用于查询当前活跃告警
 	AlertmanagerBaseURL string `json:"alertmanager_base_url"`
+	// Loki 地址，用于查询日志统计
+	LokiBaseURL string `json:"loki_base_url"`
 }
 
 func Default() Config {
@@ -117,6 +119,7 @@ func Default() Config {
 	c.Mock.Values.TxConfirmTimeSeconds = 0
 	c.Monitoring.PrometheusBaseURL = "http://localhost:9090"
 	c.Monitoring.AlertmanagerBaseURL = "http://localhost:9093"
+	c.Monitoring.LokiBaseURL = "http://localhost:3100"
 	return c
 }
 

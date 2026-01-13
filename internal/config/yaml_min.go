@@ -128,6 +128,10 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 			cfg.Mock.Values.TxConfirmTimeSeconds = f
 			return nil
 		},
+
+		"monitoring.prometheus_base_url": func(v string) error { cfg.Monitoring.PrometheusBaseURL = v; return nil },
+		"monitoring.alertmanager_base_url": func(v string) error { cfg.Monitoring.AlertmanagerBaseURL = v; return nil },
+		"monitoring.loki_base_url": func(v string) error { cfg.Monitoring.LokiBaseURL = v; return nil },
 	}
 
 	var stack []frame
