@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/explorer"
+	"github.com/biya-coin/biya-dex-backend-exporter/internal/adapters/tendermint"
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/config"
 	"github.com/biya-coin/biya-dex-backend-exporter/internal/metrics"
 )
@@ -28,7 +29,10 @@ func TestRealtimeExplorerCollector_ProvideMDMetrics(t *testing.T) {
 				"message": "success",
 				"data": map[string]any{
 					"data": []any{
-						map[string]any{"height": "123"},
+						map[string]any{
+							"height":     "123",
+							"block_hash": "test-block-hash-123",
+						},
 					},
 				},
 			})
@@ -39,8 +43,8 @@ func TestRealtimeExplorerCollector_ProvideMDMetrics(t *testing.T) {
 				"message": "success",
 				"data": map[string]any{
 					"count_24h":            5,
-					"tps":                 "7.5",
-					"avg_block_time":      2.2,
+					"tps":                  "7.5",
+					"avg_block_time":       2.2,
 					"active_addresses_24h": "100",
 				},
 			})
@@ -55,6 +59,15 @@ func TestRealtimeExplorerCollector_ProvideMDMetrics(t *testing.T) {
 				},
 			})
 			return
+		case "/block":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"result": map[string]any{
+					"block_id": map[string]any{
+						"hash": "test-block-hash-123",
+					},
+				},
+			})
+			return
 		default:
 			w.WriteHeader(http.StatusNotFound)
 			_, _ = w.Write([]byte(`{"code":404,"message":"not found","data":{}}`))
@@ -66,8 +79,9 @@ func TestRealtimeExplorerCollector_ProvideMDMetrics(t *testing.T) {
 	_, m := metrics.New("biya", "dev", "none")
 	logger := slog.New(slog.NewTextHandler(&strings.Builder{}, &slog.HandlerOptions{}))
 	cli := explorer.NewClient(srv.URL, "k", 2*time.Second)
+	tm := tendermint.NewClient(srv.URL, 2*time.Second)
 
-	c := NewRealtimeExplorerCollector(logger, m, cli, config.MockConfig{Enabled: false})
+	c := NewRealtimeExplorerCollector(logger, m, cli, tm, config.MockConfig{Enabled: false})
 	if err := c.Run(context.Background()); err != nil {
 		t.Fatalf("collector run err: %v", err)
 	}
@@ -88,5 +102,3 @@ func assertContains(t *testing.T, s, sub string) {
 		t.Fatalf("expected output to contain %q\n\nfull output:\n%s", sub, s)
 	}
 }
-
-
