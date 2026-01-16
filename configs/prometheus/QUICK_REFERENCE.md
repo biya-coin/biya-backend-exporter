@@ -104,7 +104,7 @@ curl -X POST http://localhost:9090/-/reload
 | `biya_chain_mempool_pending_txs` | Gauge | 待处理交易数 | < 10000 |
 | `biya_chain_block_gas_utilization_ratio_avg` | Gauge | Gas利用率 | < 0.95 (95%) |
 | `biya_chain_congestion_ratio` | Gauge | 拥堵指数 | < 0.8 (80%) |
-| `biya_chain_block_time_seconds_avg` | Gauge | 平均出块时间 | < 10秒 |
+| `biya_avg_block_time` | Gauge | 平均出块时间 | < 10秒 |
 
 ---
 

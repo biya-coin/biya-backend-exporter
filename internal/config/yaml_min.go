@@ -134,6 +134,11 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 		"monitoring.loki_base_url": func(v string) error { cfg.Monitoring.LokiBaseURL = v; return nil },
 	}
 
+	// 数组收集器：用于处理 validators.nodes 数组
+	var collectingArray bool
+	var arrayPath string
+	var arrayValues []string
+
 	var stack []frame
 	sc := bufio.NewScanner(bytes.NewReader(b))
 	lineNo := 0
@@ -147,6 +152,34 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 		indent := leadingSpaces(line)
 		trim := strings.TrimSpace(line)
 
+		// 检查是否是数组项（以 - 开头）
+		if strings.HasPrefix(trim, "-") {
+			if collectingArray {
+				// 检查缩进：数组项的缩进应该比数组父键的缩进更深
+				// 如果缩进减少，说明数组结束了
+				if len(stack) > 0 && indent <= stack[len(stack)-1].indent {
+					// 数组结束，保存数据
+					if arrayPath == "validators.nodes" {
+						cfg.Validators.Nodes = append([]string(nil), arrayValues...)
+					}
+					collectingArray = false
+					arrayValues = nil
+					// 继续处理当前行（可能是新的键）
+				} else {
+					// 解析数组项的值
+					itemValue := strings.TrimSpace(trim[1:])
+					val, err := parseYAMLScalar(itemValue)
+					if err != nil {
+						return fmt.Errorf("yaml line %d: %w", lineNo, err)
+					}
+					arrayValues = append(arrayValues, val)
+					continue
+				}
+			} else {
+				return fmt.Errorf("yaml line %d: unexpected array item (expect key: value): %q", lineNo, raw)
+			}
+		}
+
 		// key: value or key:
 		colon := strings.IndexByte(trim, ':')
 		if colon <= 0 {
@@ -157,13 +190,40 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 
 		// pop to parent level
 		for len(stack) > 0 && indent <= stack[len(stack)-1].indent {
+			// 如果之前正在收集数组，现在需要结束收集
+			if collectingArray {
+				if arrayPath == "validators.nodes" {
+					cfg.Validators.Nodes = append([]string(nil), arrayValues...)
+				}
+				collectingArray = false
+				arrayValues = nil
+			}
 			stack = stack[:len(stack)-1]
 		}
 
+		// 检查是否是数组的父键（validators.nodes:）
 		if rest == "" {
 			// start nested map
 			stack = append(stack, frame{indent: indent, key: key})
+			// 检查是否是 validators.nodes
+			full := buildPath(stack, key)
+			if full == "validators.nodes" {
+				collectingArray = true
+				arrayPath = full
+				arrayValues = make([]string, 0)
+			} else {
+				collectingArray = false
+			}
 			continue
+		}
+
+		// 如果之前正在收集数组，现在需要结束收集（因为遇到了非数组项）
+		if collectingArray {
+			if arrayPath == "validators.nodes" {
+				cfg.Validators.Nodes = append([]string(nil), arrayValues...)
+			}
+			collectingArray = false
+			arrayValues = nil
 		}
 
 		val, err := parseYAMLScalar(rest)
@@ -179,6 +239,13 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 		}
 		if err := setter(val); err != nil {
 			return fmt.Errorf("yaml line %d (%s): %w", lineNo, full, err)
+		}
+	}
+	
+	// 处理文件末尾的数组
+	if collectingArray {
+		if arrayPath == "validators.nodes" {
+			cfg.Validators.Nodes = append([]string(nil), arrayValues...)
 		}
 	}
 	if err := sc.Err(); err != nil {

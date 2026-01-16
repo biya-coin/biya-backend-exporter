@@ -42,7 +42,8 @@ Labels add dimensions to metrics:
 | Metric Name | Type | Labels | Description | Data Source |
 |-------------|------|--------|-------------|-------------|
 | `biya_block_height` | Gauge | - | Current block height | biya-explorer |
-| `biya_block_time_seconds` | Gauge | - | Average block time (last 100 blocks) | biya-explorer |
+| `biya_avg_block_time` | Gauge | - | Average block time (last 100 blocks) | biya-explorer |
+| `biya_block_interval` | Gauge | - | Block interval in seconds (time difference between latest two blocks) | biya-explorer |
 | `biya_blocks_total` | Counter | - | Total blocks produced | biya-explorer |
 
 ### 1.2 Transaction Metrics
@@ -84,7 +85,7 @@ Labels add dimensions to metrics:
 |-------------|------|--------|-------------|-------------|
 | `biya_node_sync_status` | Gauge | `node` | Node sync status (1=synced, 0=syncing) | injective-core |
 | `biya_node_sync_height` | Gauge | `node` | Current sync height | injective-core |
-| `biya_node_behind_blocks` | Gauge | `node` | Blocks behind latest | calculated |
+| `biya_validator_behind_blocks` | Gauge | `node` | Blocks behind latest | calculated |
 
 ---
 
@@ -297,7 +298,7 @@ groups:
           
       # Node sync behind
       - alert: NodeSyncBehind
-        expr: biya_node_behind_blocks > 100
+        expr: biya_validator_behind_blocks > 100
         for: 5m
         labels:
           severity: warning

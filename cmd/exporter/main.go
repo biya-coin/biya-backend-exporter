@@ -57,9 +57,10 @@ func main() {
 
 	// collectors（按类型分组：node / stake / explorer）
 	// 注意：这里仅调整代码结构以便维护；不修改 job 名称与 interval，避免影响指标 source label。
-	nodeJobs := []collectors.Job{
+		nodeJobs := []collectors.Job{
 		collectors.NewJob("realtime_chain", cfg.ScrapeIntervals.Realtime, collectors.NewRealtimeChainCollector(logger, m, tmCli, cfg.Mock)),
 		collectors.NewJob("minute_chain", cfg.ScrapeIntervals.Minute, collectors.NewMinuteChainCollector(logger, m, tmCli, cfg.Mock, cfg.Node.MempoolCapacity)),
+		collectors.NewJob("biya_validator_offline", cfg.ScrapeIntervals.Realtime, collectors.NewValidatorOfflineCollector(logger, m, cfg.Validators.Nodes, cfg.HTTPClient.Timeout, explorerCli)),
 	}
 
 	stakeJobs := []collectors.Job{
@@ -68,8 +69,9 @@ func main() {
 
 	// explorer jobs：当前 explorer/indexer 指标仍以内置 mock 方式由 node collectors 兜底，
 	// 后续接入真实 explorer client 后，可在这里新增独立 collector。
+	// 注意：RealtimeExplorerCollector 需要 tendermint client 用于分叉检测
 	explorerJobs := []collectors.Job{
-		collectors.NewJob("realtime_explorer", cfg.ScrapeIntervals.Realtime, collectors.NewRealtimeExplorerCollector(logger, m, explorerCli, cfg.Mock)),
+		collectors.NewJob("realtime_explorer", cfg.ScrapeIntervals.Realtime, collectors.NewRealtimeExplorerCollector(logger, m, explorerCli, tmCli, cfg.Mock)),
 	}
 
 	jobs := make([]collectors.Job, 0, len(nodeJobs)+len(stakeJobs)+len(explorerJobs))

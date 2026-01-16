@@ -17,10 +17,27 @@ type StatusResponse struct {
 	} `json:"result"`
 }
 
+// BlockResponse 对应 Tendermint/CometBFT JSON-RPC 2.0 响应格式
+// 实际响应格式：
+//
+//	{
+//	  "jsonrpc": "2.0",
+//	  "id": -1,
+//	  "result": {
+//	    "block_id": { "hash": "...", "parts": {...} },
+//	    "block": { "header": {...}, "data": {...} }
+//	  }
+//	}
 type BlockResponse struct {
-	Result struct {
+	JSONRPC string `json:"jsonrpc"` // JSON-RPC 版本，通常为 "2.0"
+	ID      int    `json:"id"`      // 请求 ID，通常为 -1
+	Result  struct {
 		BlockID struct {
-			Hash string `json:"hash"`
+			Hash  string `json:"hash"`
+			Parts struct {
+				Total int    `json:"total"`
+				Hash  string `json:"hash"`
+			} `json:"parts"`
 		} `json:"block_id"`
 		Block struct {
 			Header struct {

@@ -30,7 +30,7 @@
       "title": "下载完整日志",
       "tooltip": "在 Explore 页面查看并导出当前时间范围内的所有日志",
       "type": "link",
-      "url": "/explore?orgId=1&left=%5B%22${__from:date:iso}%22,%22${__to:date:iso}%22,%22Loki%22,%7B%22expr%22:%22%7Bjob%3D%5C%22injective-node%5C%22%7D%20%7C~%20%5C%22(ERR%7CFATAL%7CPANIC)%5C%22%20%7C%3D%20%5C%22${search_keyword}%5C%22%22%7D%5D"
+      "url": "/explore?orgId=1&left=%5B%22${__from:date:iso}%22,%22${__to:date:iso}%22,%22Loki%22,%7B%22expr%22:%22%7Bnode_id%3D~%5C%22%24node_id%5C%22%7D%20%7C~%20%5C%22(ERR%7CFATAL%7CPANIC)%5C%22%20%7C%3D%20%5C%22${search_keyword}%5C%22%22%7D%5D"
     }
   ],
   "liveNow": true,
@@ -98,7 +98,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"injective-node\"} |~ \"(ERR|FATAL|PANIC)\" [${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"(ERR|FATAL|PANIC)\" [${time_range}])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -168,7 +168,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"injective-node\"} |~ \"WRN\" [${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"WRN\" [${time_range}])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -238,7 +238,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"injective-node\"} |~ \"INF\" [${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"INF\" [${time_range}])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -308,7 +308,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"injective-node\"}[${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"}[${time_range}])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -344,7 +344,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{job=\"injective-node\"} |~ \"(ERR|FATAL|PANIC)\" |= \"$search_keyword\"",
+          "expr": "{node_id=~\"$node_id\"} |~ \"(ERR|FATAL|PANIC)\" |= \"$search_keyword\"",
           "refId": "A"
         }
       ],
@@ -353,7 +353,7 @@
     }
   ],
   "preload": false,
-  "refresh": "10s",
+  "refresh": "1m",
   "schemaVersion": 40,
   "tags": [
     "logs",
@@ -394,6 +394,53 @@
         ],
         "query": "最新1小时 : 1h, 最新6小时 : 6h, 最新24小时 : 24h, 最新7天 : 7d",
         "refresh": 2,
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "sentry-0",
+          "value": "sentry-0"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "节点",
+        "multi": false,
+        "name": "node_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "sentry-0",
+            "value": "sentry-0"
+          },
+          {
+            "selected": false,
+            "text": "sentry-1",
+            "value": "sentry-1"
+          },
+          {
+            "selected": false,
+            "text": "validator-0",
+            "value": "validator-0"
+          },
+          {
+            "selected": false,
+            "text": "validator-1",
+            "value": "validator-1"
+          },
+          {
+            "selected": false,
+            "text": "validator-2",
+            "value": "validator-2"
+          },
+          {
+            "selected": false,
+            "text": "validator-3",
+            "value": "validator-3"
+          }
+        ],
+        "query": "sentry-0,sentry-1,validator-0,validator-1,validator-2,validator-3",
         "skipUrlSync": false,
         "type": "custom"
       },

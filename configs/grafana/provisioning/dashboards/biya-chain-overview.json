@@ -1148,7 +1148,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "biya_chain_block_time_seconds_avg{chain_id=\"biya\"}",
+          "expr": "biya_avg_block_time",
           "refId": "A"
         }
       ],

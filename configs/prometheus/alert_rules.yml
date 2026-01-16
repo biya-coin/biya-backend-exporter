@@ -39,12 +39,12 @@ groups:
       - alert: 出块延迟
         expr: |
           (
-            (biya_chain_block_time_seconds_avg or biya_block_time_seconds)
+            biya_block_interval
             > 
-            ((avg_over_time(biya_chain_block_time_seconds_avg[1h]) or avg_over_time(biya_block_time_seconds[1h])) * 3)
+            (biya_avg_block_time * 3)
           )
           and
-          ((avg_over_time(biya_chain_block_time_seconds_avg[1h]) or avg_over_time(biya_block_time_seconds[1h])) > 0)
+          (biya_avg_block_time > 0)
         for: 1m
         labels:
           severity: warning
@@ -52,7 +52,7 @@ groups:
           subsystem: consensus
         annotations:
           summary: "区块间隔异常延迟"
-          description: "当前区块间隔 ({{ $value | humanize }}秒) 超过历史平均值的3倍"
+          description: "当前出块间隔 ({{ $value | humanize }}秒) 超过平均出块时间的3倍"
           处理建议: |
             1. 检查验证者节点响应时间
             2. 查看网络延迟情况
@@ -62,8 +62,8 @@ groups:
       # 网络分叉告警
       - alert: 网络分叉
         expr: |
-          # 注意：此指标需要从链监控工具获取，如果不存在则使用占位符
-          (biya_chain_fork_depth or vector(0)) > 3
+          # 检测到链分叉（biya_chain_fork == 1 表示分叉）
+          biya_chain_fork == 1
         for: 1m
         labels:
           severity: critical
@@ -71,12 +71,13 @@ groups:
           subsystem: consensus
         annotations:
           summary: "检测到网络分叉"
-          description: "检测到链分叉超过3个区块，可能存在严重共识问题"
+          description: "Explorer 和 Tendermint 节点的区块哈希不一致，可能存在严重共识问题"
           处理建议: |
             1. 立即通知技术团队
             2. 分析分叉原因
             3. 检查验证者投票情况
-            4. 考虑暂停服务并协调修复
+            4. 对比多个节点的区块哈希确认分叉范围
+            5. 考虑暂停服务并协调修复
 
   # ==========================================
   # 2. 节点相关告警
@@ -87,35 +88,30 @@ groups:
       # 验证者节点离线告警
       - alert: 验证者节点离线
         expr: |
-          (
-            (time() - biya_validator_last_active_timestamp) > 180
-          )
-          and
-          (biya_validator_status == 1)
-          and
-          (biya_validator_last_active_timestamp > 0)
+          biya_validator_offline == 1
         for: 3m
         labels:
           severity: critical
           category: availability
           subsystem: validator
         annotations:
-          summary: "验证者节点离线 - {{ $labels.moniker }}"
-          description: "验证者节点 {{ $labels.moniker }} ({{ $labels.address }}) 超过3分钟无响应，最后活跃时间: {{ $value }}秒前"
+          summary: "验证者节点离线 - {{ $labels.node_ip }}"
+          description: "验证者节点 {{ $labels.node_ip }} 超过3分钟无响应，无法连接到节点的 /status 接口"
           处理建议: |
             1. 立即检查该验证者节点状态
             2. 查看节点服务器是否正常运行
             3. 检查网络连接
             4. 查看节点日志排查问题
+            5. 验证节点 RPC 服务 (http://{{ $labels.node_ip }}:26757/status) 是否可访问
 
       # 大规模节点离线告警
       - alert: 大规模节点离线
         expr: |
           (
-            (biya_validators_active or biya_stake_validators_bonded or vector(0))
-            / 
-            (biya_validators_total or biya_stake_validators_total or vector(1))
-          ) < 0.7
+            count(biya_validator_offline == 1)
+            /
+            count(biya_validator_offline)
+          ) > 0.3
         for: 1m
         labels:
           severity: critical
@@ -123,17 +119,18 @@ groups:
           subsystem: validator
         annotations:
           summary: "大规模节点离线"
-          description: "超过30%的验证者节点同时离线，网络稳定性受到威胁"
+          description: "超过30%的验证者节点同时离线（离线比例: {{ $value | humanizePercentage }}），网络稳定性受到威胁"
           处理建议: |
             1. 立即启动应急预案
             2. 联系所有离线节点运营者
             3. 评估是否暂停服务
             4. 检查是否有网络攻击
+            5. 查看离线节点列表：在 Prometheus 中查询 `biya_validator_offline == 1` 获取所有离线节点的 node_ip
 
       # 节点同步落后告警
       - alert: 节点同步落后
         expr: |
-          (biya_node_behind_blocks or (biya_block_height - biya_node_sync_height)) > 100
+          (biya_validator_behind_blocks or (biya_block_height - biya_node_sync_height)) > 100
         for: 10m
         labels:
           severity: warning
@@ -184,11 +181,11 @@ groups:
           (
             biya_tps_current 
             < 
-            (avg_over_time(biya_tps_24h_avg[7d]) * 0.5)
+           biya_tps_24h_avg * 0.5
           )
           and
           (
-            avg_over_time(biya_tps_24h_avg[7d]) > 0
+            biya_tps_24h_avg > 0
           )
         for: 5m
         labels:
@@ -197,30 +194,12 @@ groups:
           subsystem: transaction
         annotations:
           summary: "TPS异常下降"
-          description: "当前TPS ({{ $value | humanize }}) 低于历史7天平均值的50%，已持续超过5分钟"
+          description: "当前TPS ({{ $value | humanize }}) 低于历史24小时平均值的50%，已持续超过5分钟"
           处理建议: |
             1. 检查节点运行状态
             2. 查看是否有网络分区
             3. 分析交易来源是否异常
             4. 必要时通知技术团队
-
-      # 网络延迟过高告警
-      - alert: 网络延迟过高
-        expr: |
-          (biya_tx_confirm_time_seconds_avg or biya_tx_confirm_time_avg_seconds) > 30
-        for: 1m
-        labels:
-          severity: warning
-          category: performance
-          subsystem: latency
-        annotations:
-          summary: "网络延迟过高"
-          description: "交易确认延迟 ({{ $value | humanize }}秒) 超过30秒，已持续超过1分钟"
-          处理建议: |
-            1. 检查交易池积压情况
-            2. 查看Gas费用是否飙升
-            3. 分析节点同步状态
-            4. 评估是否需要临时扩容
 
       # 交易成功率低告警
       - alert: 交易成功率低
@@ -321,75 +300,75 @@ groups:
   # ==========================================
   # 5. 存储告警
   # ==========================================
-  - name: storage_alerts
-    interval: 1h
-    rules:
-      # 存储空间不足告警
-      - alert: 存储空间不足
-        expr: |
-          # 注意：需要使用node_exporter的磁盘空间指标
-          (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) > 0.90
-          or
-          # 如果有专门的区块链数据目录指标
-          (biya_storage_usage_ratio or vector(0)) > 0.90
-        for: 1h
-        labels:
-          severity: critical
-          category: capacity
-          subsystem: storage
-        annotations:
-          summary: "存储空间不足"
-          description: "可用存储空间低于10%，可能导致节点无法正常运行"
-          处理建议: |
-            1. 立即清理不必要的日志文件
-            2. 考虑启用数据归档
-            3. 评估是否需要扩容存储
-            4. 检查是否有异常数据增长
+  # - name: storage_alerts
+  #   interval: 1h
+  #   rules:
+  #     # 存储空间不足告警
+  #     - alert: 存储空间不足
+  #       expr: |
+  #         # 注意：需要使用node_exporter的磁盘空间指标
+  #         (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) > 0.90
+  #         or
+  #         # 如果有专门的区块链数据目录指标
+  #         (biya_storage_usage_ratio or vector(0)) > 0.90
+  #       for: 1h
+  #       labels:
+  #         severity: critical
+  #         category: capacity
+  #         subsystem: storage
+  #       annotations:
+  #         summary: "存储空间不足"
+  #         description: "可用存储空间低于10%，可能导致节点无法正常运行"
+  #         处理建议: |
+  #           1. 立即清理不必要的日志文件
+  #           2. 考虑启用数据归档
+  #           3. 评估是否需要扩容存储
+  #           4. 检查是否有异常数据增长
 
-      # 存储空间预警告警
-      - alert: 存储空间预警
-        expr: |
-          (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) > 0.80
-          or
-          (biya_storage_usage_ratio or vector(0)) > 0.80
-        for: 1h
-        labels:
-          severity: warning
-          category: capacity
-          subsystem: storage
-        annotations:
-          summary: "存储空间预警"
-          description: "可用存储空间低于20%，建议及时处理"
-          处理建议: |
-            1. 检查存储使用情况
-            2. 规划存储扩容方案
-            3. 清理临时文件和日志
-            4. 考虑启用数据压缩
+      # # 存储空间预警告警
+      # - alert: 存储空间预警
+      #   expr: |
+      #     (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) > 0.80
+      #     or
+      #     (biya_storage_usage_ratio or vector(0)) > 0.80
+      #   for: 1h
+      #   labels:
+      #     severity: warning
+      #     category: capacity
+      #     subsystem: storage
+      #   annotations:
+      #     summary: "存储空间预警"
+      #     description: "可用存储空间低于20%，建议及时处理"
+      #     处理建议: |
+      #       1. 检查存储使用情况
+      #       2. 规划存储扩容方案
+      #       3. 清理临时文件和日志
+      #       4. 考虑启用数据压缩
 
       # 存储增长过快告警
-      - alert: 存储增长过快
-        expr: |
-          # 计算24小时存储增长量（GB）
-          (
-            (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_avail_bytes{mountpoint="/"})
-            -
-            (node_filesystem_size_bytes{mountpoint="/"} offset 24h - node_filesystem_avail_bytes{mountpoint="/"} offset 24h)
-          ) / 1024 / 1024 / 1024 > 100
-          or
-          (biya_storage_daily_growth_gb or vector(0)) > 100
-        for: 24h
-        labels:
-          severity: warning
-          category: capacity
-          subsystem: storage
-        annotations:
-          summary: "存储增长过快"
-          description: "24小时存储增长超过100GB，可能存在异常"
-          处理建议: |
-            1. 分析存储增长来源
-            2. 检查是否有异常数据写入
-            3. 评估数据归档策略
-            4. 规划长期存储扩容方案
+      # - alert: 存储增长过快
+      #   expr: |
+      #     # 计算24小时存储增长量（GB）
+      #     (
+      #       (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_avail_bytes{mountpoint="/"})
+      #       -
+      #       (node_filesystem_size_bytes{mountpoint="/"} offset 24h - node_filesystem_avail_bytes{mountpoint="/"} offset 24h)
+      #     ) / 1024 / 1024 / 1024 > 100
+      #     or
+      #     (biya_storage_daily_growth_gb or vector(0)) > 100
+      #   for: 24h
+      #   labels:
+      #     severity: warning
+      #     category: capacity
+      #     subsystem: storage
+      #   annotations:
+      #     summary: "存储增长过快"
+      #     description: "24小时存储增长超过100GB，可能存在异常"
+      #     处理建议: |
+      #       1. 分析存储增长来源
+      #       2. 检查是否有异常数据写入
+      #       3. 评估数据归档策略
+      #       4. 规划长期存储扩容方案
 
   # ==========================================
   # 辅助规则：计算历史平均值和复合指标
@@ -398,48 +377,81 @@ groups:
     interval: 1m
     rules:
       # 记录7天TPS平均值，用于告警规则
+      # 优先使用 biya_tps_24h_avg，如果不存在则使用 biya_tps_current 计算7天平均值
       - record: biya_tps_7d_avg
-        expr: avg_over_time(biya_tps_24h_avg[7d])
+        expr: |
+          (
+            avg_over_time((biya_tps_24h_avg or biya_tps_current)[7d])
+          )
 
-      # 记录TPS下降百分比
+      # 记录TPS下降百分比（相对于7天平均值）
+      # 添加除零保护，避免分母为0时产生无效值
       - record: biya_tps_drop_percentage
         expr: |
           (
-            (avg_over_time(biya_tps_24h_avg[7d]) - biya_tps_current) 
-            / 
-            avg_over_time(biya_tps_24h_avg[7d])
-          ) * 100
+            (
+              (biya_tps_7d_avg - biya_tps_current) 
+              / 
+              (biya_tps_7d_avg + 0.0001)
+            ) * 100
+          )
 
       # 记录当前性能健康度评分 (0-100)
+      # 权重：TPS 30%，确认时间 30%，成功率 40%
+      # 统一使用 biya_tx_confirm_time_avg_seconds（根据 metrics.go 定义）
       - record: biya_performance_health_score
         expr: |
           (
-            (
-              clamp_min(biya_tps_current / avg_over_time(biya_tps_24h_avg[7d]), 0) * 30
+            # TPS 评分 (0-30分)：当前TPS相对于7天平均值的比例
+            clamp_min(
+              (biya_tps_current / (biya_tps_7d_avg + 0.0001)) * 30,
+              0
             )
             +
-            (
-              clamp_max(1 - ((biya_tx_confirm_time_seconds_avg or biya_tx_confirm_time_avg_seconds) / 60), 1) * 30
+            # 确认时间评分 (0-30分)：60秒内为满分，超过60秒线性递减
+            clamp_max(
+              clamp_min(
+                (1 - ((biya_tx_confirm_time_avg_seconds or vector(0)) / 60)) * 30,
+                30
+              ),
+              0
             )
             +
-            (
-              biya_tx_success_rate * 40
+            # 成功率评分 (0-40分)：直接按比例计算
+            clamp_min(
+              clamp_max(
+                (biya_tx_success_rate or vector(0)) * 40,
+                0
+              ),
+              40
             )
-          ) * 100
+          )
 
       # 记录交易池使用率
+      # 优先使用 biya_congestion_ratio，如果不存在则计算
       - record: biya_mempool_usage_ratio
         expr: |
-          (biya_mempool_size or biya_chain_mempool_pending_txs or vector(0))
-          /
-          (biya_mempool_capacity or vector(5000))
+          (
+            biya_congestion_ratio
+            or
+            (
+              (biya_mempool_size or biya_chain_mempool_pending_txs or vector(0))
+              /
+              (biya_mempool_capacity or vector(5000))
+            )
+          )
 
       # 记录Gas价格倍数（相对于24h平均）
+      # 添加小偏移量避免除零，并处理指标不存在的情况
       - record: biya_gas_price_multiplier
         expr: |
-          biya_gas_price 
+          (
+            biya_gas_price or vector(0)
+          )
           /
-          (avg_over_time(biya_gas_price[24h]) + 0.0001)
+          (
+            avg_over_time((biya_gas_price or vector(0))[24h]) + 0.0001
+          )
 
   # ==========================================
   # 额外的综合告警（可选）
@@ -448,26 +460,34 @@ groups:
     interval: 30s
     rules:
       # 性能综合异常告警
+      # 当TPS、延迟、成功率三个指标同时异常时触发
       - alert: 性能综合异常告警
         expr: |
           (
+            # TPS 下降超过50%
             (
               biya_tps_current 
               < 
-              (avg_over_time(biya_tps_24h_avg[7d]) * 0.5)
+              (biya_tps_7d_avg * 0.5)
             )
             and
             (
-              avg_over_time(biya_tps_24h_avg[7d]) > 0
+              biya_tps_7d_avg > 0
             )
           )
           and
           (
-            (biya_tx_confirm_time_seconds_avg or biya_tx_confirm_time_avg_seconds) > 30
+            # 确认时间超过30秒
+            (
+              (biya_tx_confirm_time_avg_seconds or vector(0)) > 30
+            )
           )
           and
           (
-            biya_tx_success_rate < 0.90
+            # 成功率低于90%
+            (
+              (biya_tx_success_rate or vector(0)) < 0.90
+            )
           )
         for: 3m
         labels:
@@ -477,23 +497,37 @@ groups:
         annotations:
           summary: "性能综合异常 - 多个指标同时异常"
           description: |
-            检测到多个性能指标同时异常：
-            - TPS: {{ with query "biya_tps_current" }}{{ . | first | value | humanize }}{{ end }}
-            - 延迟: {{ with query "biya_tx_confirm_time_seconds_avg" }}{{ . | first | value | humanize }}秒{{ end }}
-            - 成功率: {{ with query "biya_tx_success_rate" }}{{ . | first | value | humanizePercentage }}{{ end }}
+            检测到多个性能指标同时异常，持续超过3分钟：
+            - TPS下降超过50%（当前值低于7天平均值的50%）
+            - 交易确认时间超过30秒
+            - 交易成功率低于90%
+            
+            请查看 Grafana 仪表板获取详细指标值。
           处理建议: |
             1. 立即启动应急预案
             2. 召集技术团队会商
             3. 全面排查网络问题
-            4. 必要时暂停服务维护
+            4. 检查节点状态和网络连接
+            5. 查看性能健康度评分和详细指标
+            6. 必要时暂停服务维护
           runbook_url: "https://docs.biya.chain/runbooks/emergency-response"
           dashboard: "https://grafana.biya.chain/d/chain-performance"
           page_team: "oncall"
 
       # TPS完全停止告警
+      # 当TPS为0且持续超过2分钟时触发（可能是链停止出块）
       - alert: TPS完全停止
         expr: |
-          biya_tps_current == 0
+          (
+            biya_tps_current == 0
+          )
+          and
+          (
+            # 确保不是指标缺失（如果区块高度还在增长，说明链还在运行）
+            (
+              (biya_block_height or biya_chain_head_block_height) > 0
+            )
+          )
         for: 2m
         labels:
           severity: critical
@@ -501,9 +535,22 @@ groups:
           subsystem: transaction
         annotations:
           summary: "TPS为零 - 链可能已停止出块"
-          description: "当前TPS为0，持续超过2分钟，链可能已停止运行"
+          description: |
+            当前TPS为0，持续超过2分钟。
+            
+            可能原因：
+            1. 链已停止出块
+            2. 所有验证者节点离线
+            3. 网络分区导致无法达成共识
+            4. 严重的共识故障
+            
+            请立即检查区块高度是否还在增长，以及验证者节点状态。
           处理建议: |
-            1. 立即检查节点状态
-            2. 查看是否所有验证者都离线
-            3. 检查网络连接
-            4. 启动紧急恢复流程
+            1. 立即检查所有验证者节点状态（查看 biya_validator_offline 指标）
+            2. 检查区块高度是否还在增长（查看 biya_block_height 指标）
+            3. 查看是否所有验证者都离线
+            4. 检查网络连接和分区情况
+            5. 查看节点日志排查共识问题
+            6. 启动紧急恢复流程
+          runbook_url: "https://docs.biya.chain/runbooks/tps-zero"
+          dashboard: "https://grafana.biya.chain/d/chain-performance"

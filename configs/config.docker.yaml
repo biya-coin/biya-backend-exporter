@@ -4,10 +4,20 @@ chain:
 # 本地快速启动默认走 mock 数据（mock.enabled: true）
 node:
   # 已验证该 RPC 在当前环境可达（用于 status/block/mempool 等）
-  tendermint_rpc_base_url: "http://45.249.245.183:26657"
-  lcd_base_url: "http://45.249.245.183:26657"
+  tendermint_rpc_base_url: "http://10.8.155.185:26757"
+  lcd_base_url: "http://10.8.155.185:26757"
   # 交易池容量（pending tx 上限），provide.md 口径默认 5000
   mempool_capacity: 5000
+
+# 验证者节点列表
+validators:
+  nodes:
+    - "10.8.21.50"
+    - "10.8.45.209"
+    - "10.8.61.62"
+    - "10.8.161.142"
+    - "10.8.155.185"
+    - "10.8.160.37"
 
 explorer:
   base_url: "https://prv.explorer.biya.io"

@@ -14,7 +14,6 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	// declare metrics
 	reg.MustDeclare("biya_chain_head_block_height", TypeGauge, "Latest block height observed from the chain node.", []string{"chain_id"})
 	reg.MustDeclare("biya_chain_node_catching_up", TypeGauge, "Whether the node is catching up (1) or fully synced (0).", []string{"chain_id"})
-	reg.MustDeclare("biya_chain_block_time_seconds_avg", TypeGauge, "Average block time in seconds (EMA).", []string{"chain_id"})
 	reg.MustDeclare("biya_chain_tps_window", TypeGauge, "Approximate TPS over a rolling time window. May be mocked until explorer/indexer endpoints are ready.", []string{"chain_id"})
 	reg.MustDeclare("biya_chain_tx_confirm_time_seconds_avg", TypeGauge, "Average transaction confirmation time in seconds. May be mocked.", []string{"chain_id"})
 	reg.MustDeclare("biya_chain_block_gas_utilization_ratio_avg", TypeGauge, "Average gas utilization ratio (0-1). May be mocked.", []string{"chain_id"})
@@ -39,7 +38,8 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	//
 	// 来源：仓库内 `METRICS.md`
 	reg.MustDeclare("biya_block_height", TypeGauge, "Current block height.", nil)
-	reg.MustDeclare("biya_block_time_seconds", TypeGauge, "Average block time (last 100 blocks).", nil)
+	reg.MustDeclare("biya_avg_block_time", TypeGauge, "Average block time (last 100 blocks).", nil)
+	reg.MustDeclare("biya_block_interval", TypeGauge, "Block interval in seconds (time difference between latest two blocks).", nil)
 	reg.MustDeclare("biya_blocks_total", TypeCounter, "Total blocks produced.", nil)
 
 	reg.MustDeclare("biya_tx_total", TypeCounter, "Total transactions (success/failed).", []string{"status"})
@@ -65,7 +65,9 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 
 	reg.MustDeclare("biya_node_sync_status", TypeGauge, "Node sync status (1=synced, 0=syncing).", []string{"node"})
 	reg.MustDeclare("biya_node_sync_height", TypeGauge, "Current node sync height.", []string{"node"})
-	reg.MustDeclare("biya_node_behind_blocks", TypeGauge, "Blocks behind latest.", []string{"node"})
+	reg.MustDeclare("biya_validator_behind_blocks", TypeGauge, "验证者落后区块数 (当前区块高度 - 节点区块高度).", []string{"node_ip"})
+
+	reg.MustDeclare("biya_chain_fork", TypeGauge, "Chain fork status (0=no fork, 1=fork detected).", nil)
 
 	reg.MustDeclare("biya_validators_total", TypeGauge, "Total validators (all created).", nil)
 	reg.MustDeclare("biya_validators_consensus", TypeGauge, "Validators participating in consensus (TOP N).", nil)
@@ -91,6 +93,8 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	reg.MustDeclare("biya_validator_rewards_24h_byb", TypeGauge, "Validator 24h rewards (BYB).", []string{"address", "moniker"})
 	reg.MustDeclare("biya_validator_jailed", TypeGauge, "Validator jailed (1=yes, 0=no).", []string{"address", "moniker"})
 
+	reg.MustDeclare("biya_validator_offline", TypeGauge, "验证者节点离线 (1=离线, 0=在线).", []string{"node_ip"})
+
 	reg.MustDeclare("biya_proposals_total", TypeCounter, "Total proposals created.", nil)
 	reg.MustDeclare("biya_proposals_passed", TypeGauge, "Total passed proposals.", nil)
 	reg.MustDeclare("biya_proposals_rejected", TypeGauge, "Total rejected proposals.", nil)
@@ -107,7 +111,8 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	reg.SetGauge("biya_tx_total", map[string]string{"status": "success"}, 0)
 	reg.SetGauge("biya_tx_total", map[string]string{"status": "failed"}, 0)
 	reg.SetGauge("biya_block_height", nil, 0)
-	reg.SetGauge("biya_block_time_seconds", nil, 0)
+	reg.SetGauge("biya_avg_block_time", nil, 0)
+	reg.SetGauge("biya_block_interval", nil, 0)
 	reg.SetGauge("biya_blocks_total", nil, 0)
 	reg.SetGauge("biya_tx_24h_total", nil, 0)
 	reg.SetGauge("biya_tps_current", nil, 0)
@@ -122,6 +127,7 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	reg.SetGauge("biya_congestion_ratio", nil, 0)
 	reg.SetGauge("biya_validators_total", nil, 0)
 	reg.SetGauge("biya_validators_jailed", nil, 0)
+	reg.SetGauge("biya_chain_fork", nil, 0)
 
 	m := &Metrics{chainID: chainID, reg: reg}
 

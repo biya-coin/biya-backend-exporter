@@ -25,6 +25,9 @@ type Config struct {
 	
 	// 监控系统配置
 	Monitoring MonitoringConfig `json:"monitoring"`
+	
+	// 验证者节点列表
+	Validators ValidatorsConfig `json:"validators"`
 }
 
 type ChainConfig struct {
@@ -95,6 +98,11 @@ type MonitoringConfig struct {
 	LokiBaseURL string `json:"loki_base_url"`
 }
 
+type ValidatorsConfig struct {
+	// 验证者节点 IP 地址列表
+	Nodes []string `json:"nodes"`
+}
+
 func Default() Config {
 	var c Config
 	c.Chain.ChainID = "biya"
@@ -120,6 +128,7 @@ func Default() Config {
 	c.Monitoring.PrometheusBaseURL = "http://localhost:9090"
 	c.Monitoring.AlertmanagerBaseURL = "http://localhost:9093"
 	c.Monitoring.LokiBaseURL = "http://localhost:3100"
+	c.Validators.Nodes = []string{}
 	return c
 }
 

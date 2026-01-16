@@ -55,13 +55,12 @@ func (c *RealtimeChainCollector) Run(ctx context.Context) error {
 		c.m.SetGauge("biya_node_sync_status", map[string]string{"node": "default"}, 1)
 	}
 	c.m.SetGauge("biya_node_sync_height", map[string]string{"node": "default"}, float64(h))
-	c.m.SetGauge("biya_node_behind_blocks", map[string]string{"node": "default"}, 0)
+	c.m.SetGauge("biya_validator_behind_blocks", map[string]string{"node": "default"}, 0)
 
 	avgBT := c.updateBlockTimeAvg(h, st.Result.SyncInfo.LatestBlockTime)
 	if avgBT > 0 {
-		c.m.SetGauge("biya_chain_block_time_seconds_avg", map[string]string{"chain_id": chainID}, avgBT)
-		// 注意：provide.md 口径里 biya_block_time_seconds 来自 explorer /api/v1/transaction/stats 的 avg_block_time
-		// 这里不再写入 biya_block_time_seconds，避免同名指标被多个 collector 覆盖导致口径冲突。
+		// 注意：provide.md 口径里 biya_avg_block_time 来自 explorer /api/v1/transaction/stats 的 avg_block_time
+		// 这里不再写入 biya_avg_block_time，避免同名指标被多个 collector 覆盖导致口径冲突。
 		// BFT 下确认时间可先近似为出块时间
 		c.m.SetGauge("biya_chain_tx_confirm_time_seconds_avg", map[string]string{"chain_id": chainID}, avgBT)
 		c.m.SetGauge("biya_tx_confirm_time_avg_seconds", nil, avgBT)
