@@ -104,6 +104,34 @@ groups:
             4. 查看节点日志排查问题
             5. 验证节点 RPC 服务 (http://{{ $labels.node_ip }}:26757/status) 是否可访问
 
+      # 验证者节点 Metrics 端点掉线告警
+      - alert: 验证者节点Metrics端点掉线
+        expr: |
+          up{job="validator-node-metrics"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+          subsystem: validator
+        annotations:
+          summary: "验证者节点 Metrics 端点掉线 - {{ $labels.instance }}"
+          description: |
+            验证者节点 {{ $labels.instance }} 的 26760/metrics 端点超过2分钟无响应，Prometheus 无法采集该节点的指标数据。
+            
+            当前状态：
+            - 节点地址: {{ $labels.instance }}
+            - Job: {{ $labels.job }}
+            - 持续时间: 超过2分钟
+          处理建议: |
+            1. 立即检查该验证者节点状态
+            2. 验证节点 26760 端口是否正常监听: curl http://{{ $labels.instance }}/metrics
+            3. 检查节点服务器是否正常运行
+            4. 查看节点进程是否异常退出
+            5. 检查网络连接和防火墙规则
+            6. 查看节点日志排查问题
+            7. 验证节点服务是否正常启动
+            8. 如果节点服务异常，立即重启节点服务
+
       # 大规模节点离线告警
       - alert: 大规模节点离线
         expr: |
@@ -126,6 +154,37 @@ groups:
             3. 评估是否暂停服务
             4. 检查是否有网络攻击
             5. 查看离线节点列表：在 Prometheus 中查询 `biya_validator_offline == 1` 获取所有离线节点的 node_ip
+
+      # 大规模验证者节点 Metrics 端点掉线告警
+      - alert: 大规模验证者节点Metrics端点掉线
+        expr: |
+          (
+            count(up{job="validator-node-metrics"} == 0)
+            /
+            count(up{job="validator-node-metrics"})
+          ) > 0.3
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+          subsystem: validator
+        annotations:
+          summary: "大规模验证者节点 Metrics 端点掉线"
+          description: |
+            超过30%的验证者节点 Metrics 端点（26760/metrics）同时掉线（掉线比例: {{ $value | humanizePercentage }}），无法采集指标数据，监控系统受到影响。
+            
+            当前状态：
+            - 掉线节点数量: {{ count(up{job="validator-node-metrics"} == 0) }}
+            - 总节点数量: {{ count(up{job="validator-node-metrics"}) }}
+            - 掉线比例: {{ $value | humanizePercentage }}
+          处理建议: |
+            1. 立即启动应急预案
+            2. 联系所有掉线节点运营者
+            3. 检查是否有网络分区或攻击
+            4. 验证 Prometheus 服务器网络连接
+            5. 查看离线节点列表：在 Prometheus 中查询 `up{job="validator-node-metrics"} == 0` 获取所有掉线节点
+            6. 检查防火墙规则是否变更
+            7. 评估是否需要暂停服务进行维护
 
       # 节点同步落后告警
       - alert: 节点同步落后
@@ -417,7 +476,9 @@ groups:
       - record: biya_tps_7d_avg
         expr: |
           (
-            avg_over_time((biya_tps_24h_avg or biya_tps_current)[7d])
+            avg_over_time(biya_tps_24h_avg[7d])
+            or
+            avg_over_time(biya_tps_current[7d])
           )
 
       # 记录TPS下降百分比（相对于7天平均值）
@@ -486,7 +547,7 @@ groups:
           )
           /
           (
-            avg_over_time((biya_gas_price or vector(0))[24h]) + 0.0001
+            (avg_over_time(biya_gas_price[24h]) or vector(0)) + 0.0001
           )
 
   # ==========================================

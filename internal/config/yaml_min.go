@@ -203,9 +203,7 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 
 		// 检查是否是数组的父键（validators.nodes:）
 		if rest == "" {
-			// start nested map
-			stack = append(stack, frame{indent: indent, key: key})
-			// 检查是否是 validators.nodes
+			// 检查是否是 validators.nodes（在推入栈之前构建路径）
 			full := buildPath(stack, key)
 			if full == "validators.nodes" {
 				collectingArray = true
@@ -214,6 +212,8 @@ func unmarshalYAMLMinimal(b []byte, cfg *Config) error {
 			} else {
 				collectingArray = false
 			}
+			// start nested map
+			stack = append(stack, frame{indent: indent, key: key})
 			continue
 		}
 
