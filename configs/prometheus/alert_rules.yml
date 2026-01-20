@@ -204,7 +204,7 @@ groups:
       # 交易成功率低告警
       - alert: 交易成功率低
         expr: |
-          biya_tx_success_rate < 0.90
+          biya_tx_success_rate < 90
         for: 5m
         labels:
           severity: critical
@@ -212,7 +212,7 @@ groups:
           subsystem: transaction
         annotations:
           summary: "交易成功率低"
-          description: "交易成功率 ({{ $value | humanizePercentage }}) 低于90%，已持续超过5分钟"
+          description: "交易成功率 ({{ $value }}%) 低于90%，已持续超过5分钟"
           处理建议: |
             1. 立即查看失败交易原因
             2. 检查是否有合约攻击
@@ -298,77 +298,113 @@ groups:
             4. 通知用户交易可能被延迟
 
   # ==========================================
-  # 5. 存储告警
+  # 5. 存储告警（验证者节点）
   # ==========================================
-  # - name: storage_alerts
-  #   interval: 1h
-  #   rules:
-  #     # 存储空间不足告警
-  #     - alert: 存储空间不足
-  #       expr: |
-  #         # 注意：需要使用node_exporter的磁盘空间指标
-  #         (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) > 0.90
-  #         or
-  #         # 如果有专门的区块链数据目录指标
-  #         (biya_storage_usage_ratio or vector(0)) > 0.90
-  #       for: 1h
-  #       labels:
-  #         severity: critical
-  #         category: capacity
-  #         subsystem: storage
-  #       annotations:
-  #         summary: "存储空间不足"
-  #         description: "可用存储空间低于10%，可能导致节点无法正常运行"
-  #         处理建议: |
-  #           1. 立即清理不必要的日志文件
-  #           2. 考虑启用数据归档
-  #           3. 评估是否需要扩容存储
-  #           4. 检查是否有异常数据增长
+  - name: storage_alerts
+    interval: 1h
+    rules:
+      # 验证者节点存储空间不足告警
+      - alert: 验证者节点存储空间不足
+        expr: |
+          (
+            1 - (
+              node_filesystem_avail_bytes{job="validator-node-exporter", mountpoint="/"}
+              /
+              node_filesystem_size_bytes{job="validator-node-exporter", mountpoint="/"}
+            )
+          ) > 0.90
+        for: 1h
+        labels:
+          severity: critical
+          category: capacity
+          subsystem: storage
+        annotations:
+          summary: "验证者节点存储空间不足 - {{ $labels.instance }}"
+          description: |
+            验证者节点 {{ $labels.instance }} 的可用存储空间低于10%，可能导致节点无法正常运行。
+            
+            当前状态：
+            - 节点: {{ $labels.instance }}
+            - 挂载点: {{ $labels.mountpoint }}
+            - 文件系统: {{ $labels.fstype }}
+            - 使用率: {{ $value | humanizePercentage }}
+          处理建议: |
+            1. 立即清理不必要的日志文件
+            2. 考虑启用数据归档
+            3. 评估是否需要扩容存储
+            4. 检查是否有异常数据增长
+            5. 如果空间继续减少，准备暂停节点服务
 
-      # # 存储空间预警告警
-      # - alert: 存储空间预警
-      #   expr: |
-      #     (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) > 0.80
-      #     or
-      #     (biya_storage_usage_ratio or vector(0)) > 0.80
-      #   for: 1h
-      #   labels:
-      #     severity: warning
-      #     category: capacity
-      #     subsystem: storage
-      #   annotations:
-      #     summary: "存储空间预警"
-      #     description: "可用存储空间低于20%，建议及时处理"
-      #     处理建议: |
-      #       1. 检查存储使用情况
-      #       2. 规划存储扩容方案
-      #       3. 清理临时文件和日志
-      #       4. 考虑启用数据压缩
+      # 验证者节点存储空间预警告警
+      - alert: 验证者节点存储空间预警
+        expr: |
+          (
+            1 - (
+              node_filesystem_avail_bytes{job="validator-node-exporter", mountpoint="/"}
+              /
+              node_filesystem_size_bytes{job="validator-node-exporter", mountpoint="/"}
+            )
+          ) > 0.80
+        for: 1h
+        labels:
+          severity: warning
+          category: capacity
+          subsystem: storage
+        annotations:
+          summary: "验证者节点存储空间预警 - {{ $labels.instance }}"
+          description: |
+            验证者节点 {{ $labels.instance }} 的可用存储空间低于20%，建议及时处理。
+            
+            当前状态：
+            - 节点: {{ $labels.instance }}
+            - 挂载点: {{ $labels.mountpoint }}
+            - 文件系统: {{ $labels.fstype }}
+            - 使用率: {{ $value | humanizePercentage }}
+          处理建议: |
+            1. 检查存储使用情况
+            2. 规划存储扩容方案
+            3. 清理临时文件和日志
+            4. 考虑启用数据压缩或归档
+            5. 监控磁盘增长趋势
 
-      # 存储增长过快告警
-      # - alert: 存储增长过快
-      #   expr: |
-      #     # 计算24小时存储增长量（GB）
-      #     (
-      #       (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_avail_bytes{mountpoint="/"})
-      #       -
-      #       (node_filesystem_size_bytes{mountpoint="/"} offset 24h - node_filesystem_avail_bytes{mountpoint="/"} offset 24h)
-      #     ) / 1024 / 1024 / 1024 > 100
-      #     or
-      #     (biya_storage_daily_growth_gb or vector(0)) > 100
-      #   for: 24h
-      #   labels:
-      #     severity: warning
-      #     category: capacity
-      #     subsystem: storage
-      #   annotations:
-      #     summary: "存储增长过快"
-      #     description: "24小时存储增长超过100GB，可能存在异常"
-      #     处理建议: |
-      #       1. 分析存储增长来源
-      #       2. 检查是否有异常数据写入
-      #       3. 评估数据归档策略
-      #       4. 规划长期存储扩容方案
+      # 验证者节点存储增长过快告警
+      - alert: 验证者节点存储增长过快
+        expr: |
+          # 计算24小时存储增长量（GB）
+          (
+            (
+              node_filesystem_size_bytes{job="validator-node-exporter", mountpoint="/"}
+              -
+              node_filesystem_avail_bytes{job="validator-node-exporter", mountpoint="/"}
+            )
+            -
+            (
+              node_filesystem_size_bytes{job="validator-node-exporter", mountpoint="/"} offset 24h
+              -
+              node_filesystem_avail_bytes{job="validator-node-exporter", mountpoint="/"} offset 24h
+            )
+          ) / 1024 / 1024 / 1024 > 100
+        for: 24h
+        labels:
+          severity: warning
+          category: capacity
+          subsystem: storage
+        annotations:
+          summary: "验证者节点存储增长过快 - {{ $labels.instance }}"
+          description: |
+            验证者节点 {{ $labels.instance }} 的存储空间在24小时内增长超过100GB，可能存在异常。
+            
+            当前状态：
+            - 节点: {{ $labels.instance }}
+            - 挂载点: {{ $labels.mountpoint }}
+            - 文件系统: {{ $labels.fstype }}
+            - 24小时增长: {{ $value | humanize }} GB
+          处理建议: |
+            1. 分析存储增长来源
+            2. 检查是否有异常数据写入
+            3. 评估数据归档策略
+            4. 规划长期存储扩容方案
+            5. 检查日志文件是否异常增长
 
   # ==========================================
   # 辅助规则：计算历史平均值和复合指标

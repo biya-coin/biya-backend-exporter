@@ -183,6 +183,14 @@ func (c *Client) GetFailedTransactions24H(ctx context.Context, p NestedPaginatio
 	return out, nil
 }
 
+func (c *Client) GetTransactionFailed1000(ctx context.Context) (json.RawMessage, error) {
+	var out json.RawMessage
+	if err := c.api.GetJSON(ctx, "/api/v1/transaction/failed-1000", nil, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func addCursorPage(q url.Values, p CursorPage) {
 	if p.Page > 0 {
 		q.Set("page", fmt.Sprintf("%d", p.Page))

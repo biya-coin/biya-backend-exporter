@@ -38,3 +38,15 @@ scrape_configs:
       # 访问主机上的 26660 端口
       # 通过 extra_hosts 配置的 host.docker.internal 访问主机端口
       - targets: ["172.24.0.1:26660"]
+
+  - job_name: validator-node-exporter
+    metrics_path: /metrics
+    static_configs:
+      # 收集所有验证者节点的 node_exporter 指标
+      - targets:
+          - "10.8.21.50:9100"
+          - "10.8.45.209:9100"
+          - "10.8.61.62:9100"
+          - "10.8.161.142:9100"
+          - "10.8.155.185:9100"
+          - "10.8.160.37:9100"

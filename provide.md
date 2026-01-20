@@ -47,7 +47,10 @@
       指标描述：验证者落后区块数
       获取的地址：  curl --request GET --url https://${节点ip}:26757/status
       取值： 用上面的当前区块高度biya_block_height减去这里的请求返回的.result.sync_info.latest_block_height得到，每个节点需要打上标签
-  
+    - 指标名称: biya_tx_success_rate
+      指标描述：交易成功率
+      获取的地址：  curl --request GET --url https://prv.explorer.biya.io/api/v1/transaction/failed-1000
+      取值: .data.success_rate_1000
   
 
 ## chain node

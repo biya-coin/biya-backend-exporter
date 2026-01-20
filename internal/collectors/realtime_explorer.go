@@ -62,6 +62,10 @@ func (c *RealtimeExplorerCollector) Run(ctx context.Context) error {
 		c.m.SetGauge("biya_gas_utilization", nil, v)
 	}
 
+	if v, ok := c.readTransactionSuccessRate(ctx); ok {
+		c.m.SetGauge("biya_tx_success_rate", nil, v)
+	}
+
 	// 检测链分叉：对比 explorer 和 tendermint 节点的区块哈希
 	if forkStatus, ok := c.detectFork(ctx); ok {
 		c.m.SetGauge("biya_chain_fork", nil, forkStatus)
@@ -247,6 +251,34 @@ func (c *RealtimeExplorerCollector) readGasUtilization(ctx context.Context) (flo
 		return 0, false
 	}
 	c.m.SetGauge("biya_exporter_source_up", map[string]string{"source": "explorer_block_gas_utilization"}, 1)
+	return v, true
+}
+
+func (c *RealtimeExplorerCollector) readTransactionSuccessRate(ctx context.Context) (float64, bool) {
+	raw, err := c.api.GetTransactionFailed1000(ctx)
+	if err != nil {
+		c.m.SetGauge("biya_exporter_source_up", map[string]string{"source": "explorer_transaction_failed_1000"}, 0)
+		return 0, false
+	}
+
+	// apiclient 已剥离 envelope.data，因此这里期望结构为：
+	// {"success_rate_1000": ...}
+	var resp struct {
+		SuccessRate1000 any `json:"success_rate_1000"`
+	}
+	if err := jsonUnmarshal(raw, &resp); err != nil {
+		c.log.Warn("explorer transaction success rate parse failed", "collector", "realtime_explorer", "method", "readTransactionSuccessRate", "err", err)
+		c.m.SetGauge("biya_exporter_source_up", map[string]string{"source": "explorer_transaction_failed_1000"}, 0)
+		return 0, false
+	}
+	v, ok := toFloat64(resp.SuccessRate1000)
+	if !ok {
+		// 上游在部分环境可能不返回 success_rate_1000 字段；此时视为该 source 不可用，避免"source_up=1 但指标为 0"的误导。
+		c.log.Warn("explorer transaction success rate field missing", "collector", "realtime_explorer", "method", "readTransactionSuccessRate")
+		c.m.SetGauge("biya_exporter_source_up", map[string]string{"source": "explorer_transaction_failed_1000"}, 0)
+		return 0, false
+	}
+	c.m.SetGauge("biya_exporter_source_up", map[string]string{"source": "explorer_transaction_failed_1000"}, 1)
 	return v, true
 }
 
