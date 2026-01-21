@@ -335,7 +335,7 @@ annotations:
     2. 查看网络连接
     3. 分析交易来源
   runbook_url: "https://docs.biya.chain/runbooks/tps-drop"
-  dashboard: "https://grafana.biya.chain/d/performance"
+  dashboard: "https://prv.grafana.biya.io/d/performance"
 ```
 
 ### 5. 使用录制规则优化性能

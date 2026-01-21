@@ -120,14 +120,14 @@
 3. 选择 **Embed** 标签
 4. 复制 iframe URL
 5. 修改 URL：
-   - 将 `localhost:3000` 替换为实际服务器地址（如 `45.249.245.183:3000`）
+   - 将 `localhost:3000` 替换为实际服务器地址（如 `prv.grafana.biya.io`）
    - 添加参数：`&kiosk=tv`（隐藏导航栏）
    - 添加时间范围：`&from=now-24h&to=now`
    - 添加刷新间隔：`&refresh=10s`
 
 **示例 URL：**
 ```
-http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv
+https://prv.grafana.biya.io/d/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv
 ```
 
 ### 2.2 单个面板嵌入（推荐）
@@ -140,7 +140,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
   <!-- 错误日志 -->
   <iframe 
-    src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=1&__feature.dashboardSceneSolo" 
+    src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=1&__feature.dashboardSceneSolo" 
     width="100%" 
     height="200" 
     frameborder="0">
@@ -148,7 +148,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
   
   <!-- 警告日志 -->
   <iframe 
-    src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=2&__feature.dashboardSceneSolo" 
+    src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=2&__feature.dashboardSceneSolo" 
     width="100%" 
     height="200" 
     frameborder="0">
@@ -156,7 +156,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
   
   <!-- 信息日志 -->
   <iframe 
-    src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=3&__feature.dashboardSceneSolo" 
+    src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=3&__feature.dashboardSceneSolo" 
     width="100%" 
     height="200" 
     frameborder="0">
@@ -164,7 +164,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
   
   <!-- 总日志数 -->
   <iframe 
-    src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=4&__feature.dashboardSceneSolo" 
+    src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=4&__feature.dashboardSceneSolo" 
     width="100%" 
     height="200" 
     frameborder="0">
@@ -176,7 +176,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
 
 ```html
 <iframe 
-  src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=5&__feature.dashboardSceneSolo" 
+  src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=5&__feature.dashboardSceneSolo" 
   width="100%" 
   height="600" 
   frameborder="0">
@@ -278,7 +278,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
             <div class="stats-grid">
                 <div class="stat-card">
                     <iframe 
-                        src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=1&__feature.dashboardSceneSolo" 
+                        src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=1&__feature.dashboardSceneSolo" 
                         width="100%" 
                         height="150" 
                         frameborder="0">
@@ -286,7 +286,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
                 </div>
                 <div class="stat-card">
                     <iframe 
-                        src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=2&__feature.dashboardSceneSolo" 
+                        src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=2&__feature.dashboardSceneSolo" 
                         width="100%" 
                         height="150" 
                         frameborder="0">
@@ -294,7 +294,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
                 </div>
                 <div class="stat-card">
                     <iframe 
-                        src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=3&__feature.dashboardSceneSolo" 
+                        src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=3&__feature.dashboardSceneSolo" 
                         width="100%" 
                         height="150" 
                         frameborder="0">
@@ -302,7 +302,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
                 </div>
                 <div class="stat-card">
                     <iframe 
-                        src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=4&__feature.dashboardSceneSolo" 
+                        src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=4&__feature.dashboardSceneSolo" 
                         width="100%" 
                         height="150" 
                         frameborder="0">
@@ -315,7 +315,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
                 <div class="section-title">● 关键错误日志</div>
                 <div class="logs-container">
                     <iframe 
-                        src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=5&__feature.dashboardSceneSolo" 
+                        src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=5&__feature.dashboardSceneSolo" 
                         width="100%" 
                         height="500" 
                         frameborder="0">
@@ -333,7 +333,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis-dashboard?orgId=1&from=no
 ```html
 <!-- 按节点ID过滤的日志 -->
 <iframe 
-  src="http://45.249.245.183:3000/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=6&var-node_id=validator-001&__feature.dashboardSceneSolo" 
+  src="https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis-dashboard?orgId=1&from=now-24h&to=now&refresh=10s&panelId=6&var-node_id=validator-001&__feature.dashboardSceneSolo" 
   width="100%" 
   height="600" 
   frameborder="0">

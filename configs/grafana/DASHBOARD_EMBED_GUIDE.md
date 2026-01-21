@@ -11,13 +11,13 @@ Grafana 支持两种嵌入方式：
 ### URL 格式
 
 ```
-http://45.249.245.183:3000/d/{dashboard-uid}/{dashboard-title}?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv
+https://prv.grafana.biya.io/d/{dashboard-uid}/{dashboard-title}?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv
 ```
 
 ### 日志分析 Dashboard 嵌入 URL
 
 ```
-http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light
+https://prv.grafana.biya.io/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light
 ```
 
 ### HTML 代码示例
@@ -41,7 +41,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=n
 <body>
     <div class="dashboard-container">
         <iframe 
-            src="http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv" 
+            src="https://prv.grafana.biya.io/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv" 
             width="100%" 
             height="100%" 
             frameborder="0"
@@ -93,7 +93,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=n
 
 ```html
 <iframe 
-    src="http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light" 
+    src="https://prv.grafana.biya.io/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light" 
     width="100%" 
     height="100vh" 
     frameborder="0"
@@ -107,7 +107,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=n
 ```html
 <div style="width: 100%; height: 800px;">
     <iframe 
-        src="http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light" 
+        src="https://prv.grafana.biya.io/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light" 
         width="100%" 
         height="100%" 
         frameborder="0"
@@ -121,7 +121,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=n
 ```html
 <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden;">
     <iframe 
-        src="http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light" 
+        src="https://prv.grafana.biya.io/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&kiosk=tv&theme=light" 
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
         allowfullscreen>
     </iframe>
@@ -133,7 +133,7 @@ http://45.249.245.183:3000/d/log-analysis/log-analysis?orgId=1&from=now-24h&to=n
 如果需要只嵌入单个面板，可以使用 `d-solo` 路径：
 
 ```
-http://45.249.245.183:3000/d-solo/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&panelId=1&__feature.dashboardSceneSolo
+https://prv.grafana.biya.io/d-solo/log-analysis/log-analysis?orgId=1&from=now-24h&to=now&refresh=10s&panelId=1&__feature.dashboardSceneSolo
 ```
 
 **注意：** 需要先获取面板的实际 ID（在 Grafana 中点击面板右上角菜单 → "Share" → "Embed"）

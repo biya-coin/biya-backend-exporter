@@ -129,7 +129,7 @@ if [ "$1" = "--alertmanager-test" ]; then
     "description": "当前TPS (45.2) 低于历史7天平均值的50%，已持续超过5分钟",
     "处理建议": "1. 检查节点运行状态\n2. 查看是否有网络分区\n3. 分析交易来源是否异常\n4. 必要时通知技术团队",
     "runbook_url": "https://docs.biya.chain/runbooks/tps-drop",
-    "dashboard": "https://grafana.biya.chain/d/chain-performance"
+    "dashboard": "https://prv.grafana.biya.io/d/chain-performance"
   },
   "alerts": [
     {

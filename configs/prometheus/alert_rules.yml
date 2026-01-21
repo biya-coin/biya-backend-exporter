@@ -174,9 +174,9 @@ groups:
             超过30%的验证者节点 Metrics 端点（26760/metrics）同时掉线（掉线比例: {{ $value | humanizePercentage }}），无法采集指标数据，监控系统受到影响。
             
             当前状态：
-            - 掉线节点数量: {{ count(up{job="validator-node-metrics"} == 0) }}
-            - 总节点数量: {{ count(up{job="validator-node-metrics"}) }}
             - 掉线比例: {{ $value | humanizePercentage }}
+            
+            注意：请在 Prometheus 中查询 `up{job="validator-node-metrics"} == 0` 获取所有掉线节点的详细信息。
           处理建议: |
             1. 立即启动应急预案
             2. 联系所有掉线节点运营者
@@ -608,7 +608,7 @@ groups:
             5. 查看性能健康度评分和详细指标
             6. 必要时暂停服务维护
           runbook_url: "https://docs.biya.chain/runbooks/emergency-response"
-          dashboard: "https://grafana.biya.chain/d/chain-performance"
+          dashboard: "https://prv.grafana.biya.io/d/chain-performance"
           page_team: "oncall"
 
       # TPS完全停止告警
@@ -650,4 +650,4 @@ groups:
             5. 查看节点日志排查共识问题
             6. 启动紧急恢复流程
           runbook_url: "https://docs.biya.chain/runbooks/tps-zero"
-          dashboard: "https://grafana.biya.chain/d/chain-performance"
+          dashboard: "https://prv.grafana.biya.io/d/chain-performance"
