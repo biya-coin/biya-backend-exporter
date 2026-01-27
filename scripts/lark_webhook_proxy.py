@@ -23,6 +23,9 @@ app = Flask(__name__)
 
 # 飞书机器人 Webhook URL
 LARK_WEBHOOK_URL = "https://open.larksuite.com/open-apis/bot/v2/hook/020ec13d-fd66-4910-8636-5fd213c903e3"
+# Backend Webhook URL
+BACKEND_WEBHOOK_URL = "http://backend:8080/api/v1/alerts/webhook"
+BACKEND_WEBHOOK_TOKEN = "666666"
 # 告警级别对应的颜色和图标
 SEVERITY_CONFIG = {
     'emergency': {'color': 'red', 'icon': '🔴', 'name': '紧急'},
@@ -199,10 +202,36 @@ def send_to_lark_card(title, content, severity='info'):
         # 如果卡片格式失败，尝试发送文本消息
         return send_to_lark_text(title, content)
 
+def send_to_backend_webhook(alert_data):
+    """
+    发送告警数据到 backend webhook 服务
+    """
+    try:
+        response = requests.post(
+            BACKEND_WEBHOOK_URL,
+            json=alert_data,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {BACKEND_WEBHOOK_TOKEN}'
+            },
+            timeout=10
+        )
+        response.raise_for_status()
+        logger.info(f"告警已转发到 backend webhook: {BACKEND_WEBHOOK_URL}")
+        return True
+    except requests.exceptions.RequestException as e:
+        logger.error(f"发送告警到 backend webhook 失败: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            logger.error(f"响应状态码: {e.response.status_code}, 响应内容: {e.response.text}")
+        return False
+    except Exception as e:
+        logger.error(f"发送告警到 backend webhook 时发生未知错误: {e}")
+        return False
+
 @app.route('/webhook/lark', methods=['POST'])
 def webhook_handler():
     """
-    接收 Alertmanager 的 webhook 并转发到飞书
+    接收 Alertmanager 的 webhook 并转发到飞书和 backend webhook
     """
     try:
         # 获取 Alertmanager 发送的数据
@@ -216,18 +245,31 @@ def webhook_handler():
         # 获取告警级别
         severity = alert_data.get('commonLabels', {}).get('severity', 'info')
         
-        # 发送到飞书（优先使用卡片格式）
-        success = send_to_lark_card(title, content, severity)
+        # 同时发送到飞书和 backend webhook
+        lark_success = send_to_lark_card(title, content, severity)
+        backend_success = send_to_backend_webhook(alert_data)
         
-        if success:
+        # 记录发送结果
+        results = []
+        if lark_success:
+            results.append("飞书")
+        if backend_success:
+            results.append("backend webhook")
+        
+        if lark_success or backend_success:
+            message = f"消息已发送到: {', '.join(results) if results else '无'}"
             return jsonify({
                 'status': 'success',
-                'message': '消息已发送到飞书'
+                'message': message,
+                'lark_sent': lark_success,
+                'backend_sent': backend_success
             }), 200
         else:
             return jsonify({
                 'status': 'error',
-                'message': '消息发送失败'
+                'message': '消息发送失败（飞书和 backend webhook 都失败）',
+                'lark_sent': False,
+                'backend_sent': False
             }), 500
             
     except Exception as e:
@@ -281,6 +323,7 @@ def test_message():
 if __name__ == '__main__':
     logger.info("启动飞书 Webhook 转换代理服务...")
     logger.info(f"飞书 Webhook URL: {LARK_WEBHOOK_URL}")
+    logger.info(f"Backend Webhook URL: {BACKEND_WEBHOOK_URL}")
     logger.info("监听端口: 5001")
     
     # 启动 Flask 服务
