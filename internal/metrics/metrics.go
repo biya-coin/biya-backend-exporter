@@ -23,7 +23,6 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	reg.MustDeclare("biya_stake_validators_total", TypeGauge, "Total validators returned by stake API.", []string{"chain_id"})
 	reg.MustDeclare("biya_stake_validators_bonded", TypeGauge, "Bonded validators count (status==bonded).", []string{"chain_id"})
 	reg.MustDeclare("biya_stake_validators_jailed", TypeGauge, "Jailed validators count.", []string{"chain_id"})
-	reg.MustDeclare("biya_stake_validators_uptime_percentage_avg", TypeGauge, "Average uptime percentage across validators (aggregate).", []string{"chain_id"})
 	reg.MustDeclare("biya_stake_bonded_tokens", TypeGauge, "Bonded tokens from LCD staking pool (raw units).", []string{"chain_id"})
 
 	reg.MustDeclare("biya_exporter_scrape_success", TypeGauge, "Whether a collector run succeeded (1) or failed (0).", []string{"source"})
@@ -88,10 +87,10 @@ func New(chainID, version, commit string) (*Registry, *Metrics) {
 	reg.MustDeclare("biya_validator_commission_rate", TypeGauge, "Validator commission rate (0-1).", []string{"address", "moniker"})
 	reg.MustDeclare("biya_validator_blocks_proposed_total", TypeCounter, "Total blocks proposed by validator.", []string{"address", "moniker"})
 	reg.MustDeclare("biya_validator_blocks_missed_total", TypeCounter, "Total blocks missed by validator.", []string{"address", "moniker"})
-	reg.MustDeclare("biya_validator_uptime_ratio", TypeGauge, "Validator uptime ratio (0-1).", []string{"address", "moniker"})
 	reg.MustDeclare("biya_validator_last_active_timestamp", TypeGauge, "Validator last active timestamp (unix seconds).", []string{"address", "moniker"})
 	reg.MustDeclare("biya_validator_rewards_24h_byb", TypeGauge, "Validator 24h rewards (BYB).", []string{"address", "moniker"})
 	reg.MustDeclare("biya_validator_jailed", TypeGauge, "Validator jailed (1=yes, 0=no).", []string{"address", "moniker"})
+	reg.MustDeclare("biya_validator_uptime_ratio", TypeGauge, "Validator uptime ratio (0-1).", []string{"address", "moniker"})
 
 	reg.MustDeclare("biya_validator_offline", TypeGauge, "验证者节点离线 (1=离线, 0=在线).", []string{"node_ip"})
 

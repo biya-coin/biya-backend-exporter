@@ -1,4 +1,4 @@
-.PHONY: help fmt build run test clean docker-build docker-push
+.PHONY: help fmt lint build run test ci clean docker-build docker-push
 
 APP_NAME ?= biya-exporter
 BIN_DIR ?= bin
@@ -14,9 +14,11 @@ GOFLAGS ?=
 help:
 	@echo "Targets:"
 	@echo "  fmt           - gofmt all go files"
+	@echo "  lint          - go vet 静态检查"
 	@echo "  build         - build binary into ./bin"
 	@echo "  run           - run exporter (CONFIG=... optional)"
 	@echo "  test          - run unit tests"
+	@echo "  ci            - 完整 CI：fmt + lint + test + build 验证"
 	@echo "  clean         - remove build artifacts"
 	@echo "  docker-build  - build docker image"
 	@echo "  docker-push   - push docker image (requires docker login)"
@@ -24,6 +26,13 @@ help:
 fmt:
 	@echo "==> gofmt"
 	@gofmt -w cmd internal
+
+lint:
+	@echo "==> go vet"
+	@$(GO) vet ./...
+
+ci:
+	@./scripts/ci.sh
 
 build:
 	@echo "==> build $(BIN)"

@@ -51,7 +51,10 @@
       指标描述：交易成功率
       获取的地址：  curl --request GET --url https://prv.explorer.biya.io/api/v1/transaction/failed-1000
       取值: .data.success_rate_1000
-  
+    - 指标名称: biya_validator_uptime_ratio
+      指标描述：出块成功率
+      获取的地址：  curl --request GET   --url https://prv.stake.biya.io/stake/validators
+      取值: .validators.[].uptime_percentage
 
 ## chain node
     - 指标名称：biya_mempool_capacity 

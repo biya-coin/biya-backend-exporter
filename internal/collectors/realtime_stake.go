@@ -36,8 +36,6 @@ func (c *RealtimeStakeCollector) Run(ctx context.Context) error {
 
 	total := len(resp.Validators)
 	var jailed, bonded int
-	var uptimeSum float64
-	var uptimeN int
 
 	for _, v := range resp.Validators {
 		if v.Jailed {
@@ -47,10 +45,7 @@ func (c *RealtimeStakeCollector) Run(ctx context.Context) error {
 		if v.Status == 3 {
 			bonded++
 		}
-		if v.UptimePercentage > 0 {
-			uptimeSum += v.UptimePercentage
-			uptimeN++
-		}
+
 	}
 
 	c.m.SetGauge("biya_stake_validators_total", map[string]string{"chain_id": chainID}, float64(total))
@@ -89,9 +84,6 @@ func (c *RealtimeStakeCollector) Run(ctx context.Context) error {
 		c.m.SetGauge("biya_validator_last_active_timestamp", labels, 0)
 		c.m.SetGauge("biya_validator_blocks_proposed_total", labels, 0)
 		c.m.SetGauge("biya_validator_blocks_missed_total", labels, 0)
-	}
-	if uptimeN > 0 {
-		c.m.SetGauge("biya_stake_validators_uptime_percentage_avg", map[string]string{"chain_id": chainID}, uptimeSum/float64(uptimeN))
 	}
 
 	// 获取质押统计信息
@@ -247,12 +239,12 @@ func (c *RealtimeStakeCollector) readGovernanceStatistics(ctx context.Context) {
 
 	// 尝试解析常见的字段名
 	var resp struct {
-		VotingPowerTotal      any `json:"votingPowerTotal"`
-		TotalVotingPower      any `json:"totalVotingPower"`
-		ParticipationRateAvg  any `json:"participationRateAvg"`
-		AvgParticipationRate  any `json:"avgParticipationRate"`
-		AverageParticipation  any `json:"averageParticipation"`
-		ParticipationRate     any `json:"participationRate"`
+		VotingPowerTotal     any `json:"votingPowerTotal"`
+		TotalVotingPower     any `json:"totalVotingPower"`
+		ParticipationRateAvg any `json:"participationRateAvg"`
+		AvgParticipationRate any `json:"avgParticipationRate"`
+		AverageParticipation any `json:"averageParticipation"`
+		ParticipationRate    any `json:"participationRate"`
 	}
 	if err := jsonUnmarshal(raw, &resp); err != nil {
 		c.log.Warn("stake governance statistics parse failed", "collector", "realtime_stake", "method", "readGovernanceStatistics", "err", err)

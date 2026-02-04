@@ -183,6 +183,7 @@ func (c *Client) GetFailedTransactions24H(ctx context.Context, p NestedPaginatio
 	return out, nil
 }
 
+// GetTransactionFailed1000 请求 GET /api/v1/transaction/failed-1000，返回最近 1000 笔交易成功率等数据（apiclient 已剥离 envelope.data）。
 func (c *Client) GetTransactionFailed1000(ctx context.Context) (json.RawMessage, error) {
 	var out json.RawMessage
 	if err := c.api.GetJSON(ctx, "/api/v1/transaction/failed-1000", nil, &out); err != nil {
