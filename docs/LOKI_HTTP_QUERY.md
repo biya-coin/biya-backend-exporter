@@ -127,6 +127,25 @@ curl -s -G "${LOKI_URL}/loki/api/v1/query_range" \
   --data-urlencode "end=${END_NS}" \
   --data-urlencode "step=${STEP_S}"
 ```
+https://prv.backend.biya.io/loki/api/v1/query_range?query=sum%20by%20(level)%20(count_over_time(%7Bjob%3D%22validator-node%22%2Cnode_id%3D%22validator-0%22%7D%5B1h%5D))&start=1770259606000000000&end=1770263206000000000&step=3600
+
+**等价 HTTP URL**（将 `{START_NS}`、`{END_NS}`、`{STEP_S}` 替换为实际值后可直接在浏览器或 GET 请求中使用）：
+
+```
+GET https://prv.backend.biya.io/loki/api/v1/query_range?query=sum%20by%20(level)%20(count_over_time(%7Bjob%3D%22validator-node%22%2Cnode_id%3D%22validator-0%22%7D%5B1h%5D))&start={START_NS}&end={END_NS}&step={STEP_S}
+```
+
+解码后的 `query` 参数为：`sum by (level) (count_over_time({job="validator-node",node_id="validator-0"}[1h]))`。
+
+**可直接调用的 URL 示例**（最近 1 天，step=86400；需查当前时段时请自行替换 start/end 为纳秒时间戳）：
+
+https://prv.backend.biya.io/loki/api/v1/query_range?query=sum%20by%20(level)%20(count_over_time(%7Bjob%3D%22validator-node%22%2Cnode_id%3D%22validator-0%22%7D%5B1d%5D))&start=1738656000000000000&end=1738742400000000000&step=86400
+
+在终端用 curl 时**必须给整段 URL 加双引号**，否则 bash 会把 `&` 当成后台、`()` 当成子 shell 导致报错：
+
+```bash
+curl "https://prv.backend.biya.io/loki/api/v1/query_range?query=sum%20by%20(level)%20(count_over_time(%7Bjob%3D%22validator-node%22%2Cnode_id%3D%22validator-0%22%7D%5B1d%5D))&start=1738656000000000000&end=1738742400000000000&step=86400"
+```
 
 **响应示例**：每个级别一条，从 `data.result[]` 中根据 `metric.level` 取 ERR、WRN、INF 的条数（`values[0][1]` 即该级别总数）。
 

@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
+  "id": 5,
   "links": [
     {
       "asDropdown": false,
@@ -31,6 +31,54 @@
       "tooltip": "在 Explore 页面查看并导出当前时间范围内的所有日志",
       "type": "link",
       "url": "/explore?orgId=1&left=%5B%22${__from:date:iso}%22,%22${__to:date:iso}%22,%22Loki%22,%7B%22expr%22:%22%7Bnode_id%3D~%5C%22%24node_id%5C%22%7D%20%7C~%20%5C%22(ERR%7CFATAL%7CPANIC)%5C%22%20%7C%3D%20%5C%22${search_keyword}%5C%22%22%7D%5D"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "外部 iframe：错误日志 RAW（可关键词）",
+      "tooltip": "单面板嵌入（d-solo），可直接用作 iframe src",
+      "type": "link",
+      "url": "/d-solo/log-analysis/log-analysis?orgId=1&from=${__from}&to=${__to}&panelId=5&var-node_id=${node_id}&var-search_keyword=${search_keyword}&kiosk&refresh=30s"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "外部 iframe：警告日志 RAW",
+      "tooltip": "单面板嵌入（d-solo），可直接用作 iframe src",
+      "type": "link",
+      "url": "/d-solo/log-analysis/log-analysis?orgId=1&from=${__from}&to=${__to}&panelId=7&var-node_id=${node_id}&var-search_keyword=${search_keyword}&kiosk&refresh=30s"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "外部 iframe：信息日志 RAW",
+      "tooltip": "单面板嵌入（d-solo），可直接用作 iframe src",
+      "type": "link",
+      "url": "/d-solo/log-analysis/log-analysis?orgId=1&from=${__from}&to=${__to}&panelId=8&var-node_id=${node_id}&var-search_keyword=${search_keyword}&kiosk&refresh=30s"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "外部 iframe：全部日志 RAW",
+      "tooltip": "单面板嵌入（d-solo），可直接用作 iframe src",
+      "type": "link",
+      "url": "/d-solo/log-analysis/log-analysis?orgId=1&from=${__from}&to=${__to}&panelId=9&var-node_id=${node_id}&var-search_keyword=${search_keyword}&kiosk&refresh=30s"
     }
   ],
   "liveNow": true,
@@ -55,7 +103,6 @@
               "type": "special"
             }
           ],
-          "nullValueMode": "null as zero",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -81,6 +128,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "last"
@@ -88,7 +136,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "11.3.0",
       "targets": [
@@ -98,7 +148,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"(ERR|FATAL|PANIC)\" [${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"(ERR|FATAL|PANIC)\" [$__range])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -125,7 +175,6 @@
               "type": "special"
             }
           ],
-          "nullValueMode": "null as zero",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -151,6 +200,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "last"
@@ -158,7 +208,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "11.3.0",
       "targets": [
@@ -168,7 +220,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"WRN\" [${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"WRN\" [$__range])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -195,7 +247,6 @@
               "type": "special"
             }
           ],
-          "nullValueMode": "null as zero",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -221,6 +272,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "last"
@@ -228,7 +280,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "11.3.0",
       "targets": [
@@ -238,7 +292,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"INF\" [${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"} |~ \"INF\" [$__range])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -265,7 +319,6 @@
               "type": "special"
             }
           ],
-          "nullValueMode": "null as zero",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -291,6 +344,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "last"
@@ -298,7 +352,9 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "11.3.0",
       "targets": [
@@ -308,7 +364,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({node_id=~\"$node_id\"}[${time_range}])) or vector(0)",
+          "expr": "sum(count_over_time({node_id=~\"$node_id\"}[$__range])) or vector(0)",
           "refId": "A"
         }
       ],
@@ -319,6 +375,10 @@
       "datasource": {
         "type": "loki",
         "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
       },
       "gridPos": {
         "h": 12,
@@ -337,6 +397,7 @@
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -348,7 +409,130 @@
           "refId": "A"
         }
       ],
-      "title": "关键错误日志",
+      "title": "错误日志 RAW（可关键词）",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{node_id=~\"$node_id\"} |~ \"WRN\" |= \"$search_keyword\"",
+          "refId": "A"
+        }
+      ],
+      "title": "警告日志 RAW",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 8,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{node_id=~\"$node_id\"} |~ \"INF\" |= \"$search_keyword\"",
+          "refId": "A"
+        }
+      ],
+      "title": "信息日志 RAW",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 9,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{node_id=~\"$node_id\"} |= \"$search_keyword\"",
+          "refId": "A"
+        }
+      ],
+      "title": "全部日志 RAW",
       "type": "logs"
     }
   ],
@@ -363,50 +547,11 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "最新24小时",
-          "value": "24h"
-        },
-        "hide": 0,
-        "label": "时间范围",
-        "name": "time_range",
-        "options": [
-          {
-            "selected": false,
-            "text": "最新1小时",
-            "value": "1h"
-          },
-          {
-            "selected": false,
-            "text": "最新6小时",
-            "value": "6h"
-          },
-          {
-            "selected": true,
-            "text": "最新24小时",
-            "value": "24h"
-          },
-          {
-            "selected": false,
-            "text": "最新7天",
-            "value": "7d"
-          }
-        ],
-        "query": "最新1小时 : 1h, 最新6小时 : 6h, 最新24小时 : 24h, 最新7天 : 7d",
-        "refresh": 2,
-        "skipUrlSync": false,
-        "type": "custom"
-      },
-      {
-        "current": {
-          "selected": true,
           "text": "sentry-0",
           "value": "sentry-0"
         },
-        "hide": 0,
         "includeAll": false,
         "label": "节点",
-        "multi": false,
         "name": "node_id",
         "options": [
           {
@@ -441,16 +586,13 @@
           }
         ],
         "query": "sentry-0,sentry-1,validator-0,validator-1,validator-2,validator-3",
-        "skipUrlSync": false,
         "type": "custom"
       },
       {
         "current": {
-          "selected": false,
           "text": "",
           "value": ""
         },
-        "hide": 0,
         "label": "搜索关键词",
         "name": "search_keyword",
         "options": [
@@ -461,7 +603,6 @@
           }
         ],
         "query": "",
-        "skipUrlSync": false,
         "type": "textbox"
       }
     ]
@@ -474,6 +615,6 @@
   "timezone": "",
   "title": "日志分析",
   "uid": "log-analysis",
-  "version": 1,
+  "version": 71,
   "weekStart": ""
 }

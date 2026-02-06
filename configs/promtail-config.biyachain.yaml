@@ -1,38 +1,26 @@
-# Promtail 配置文件
-# 用于在各个 Injective 节点上收集日志并发送到 Loki
-# 注意：每个节点需要根据实际情况修改 node_id 和日志路径
-
 server:
-  http_listen_port: 9080
+  http_listen_port: 9081
   grpc_listen_port: 0
 
-# 记录读取位置，用于断点续传
 positions:
-  filename: /tmp/positions.yaml
+  filename: /tmp/positions/positions.yaml
 
-# Loki 客户端配置（指向 Loki 服务器）
 clients:
-  - url: http://loki:3100/loki/api/v1/push
-    # 如果 Loki 需要认证，可以配置：
-    # bearer_token_file: /path/to/token
-    # basic_auth:
-    #   username: user
-    #   password_file: /path/to/password
+  - url: http://10.8.190.46:3100/loki/api/v1/push
 
-# 日志采集配置
 scrape_configs:
-  # Injective 节点日志采集
   - job_name: validator-node
     static_configs:
       - targets:
           - localhost
         labels:
           job: validator-node
-          node_id: local-node
-          __path__: /home/injectived/logs/inj.log
+          node_id: validator-0
+          __path__: /data/biyachain/log/biyachaind.log
+    
     pipeline_stages:
       - replace:
-          expression: '(\x1b\[|\^\[\[?)[0-9;]*m'
+          expression: "(\x1b\\[|\\^\\[\\[?)[0-9;]*m"
           replace: ''
 
       - regex:
@@ -43,7 +31,7 @@ scrape_configs:
 
       # 仅当匹配到 ERR/FATAL/PANIC 时打 has_error 标签（值为 ERR/FATAL/PANIC，查错可用 has_error=~"ERR|FATAL|PANIC"）
       - regex:
-          expression: '\s+(?P<has_error>ERR|FATAL|PANIC)\s+'
+          expression: '(?P<has_error>ERR|FATAL|PANIC)\b'
       - labels:
           has_error:
 
