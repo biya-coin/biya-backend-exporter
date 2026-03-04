@@ -5,22 +5,12 @@ groups:
   - name: blockchain_core_alerts
     interval: 30s
     rules:
-      # 停止出块告警
+      # 停止出块告警（仅基于 Tendermint 链头高度）
       - alert: 停止出块
         expr: |
-          (
-            # 检查区块高度是否在5分钟内没有变化
-            (changes(biya_chain_head_block_height[5m]) == 0)
-            and
-            (biya_chain_head_block_height > 0)
-          )
-          or
-          (
-            # 备用方案：使用biya_block_height
-            (changes(biya_block_height[5m]) == 0)
-            and
-            (biya_block_height > 0)
-          )
+          (changes(biya_chain_head_block_height[5m]) == 0)
+          and
+          (biya_chain_head_block_height > 0)
         for: 5m
         labels:
           severity: critical
