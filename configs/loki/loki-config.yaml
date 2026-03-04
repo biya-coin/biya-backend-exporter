@@ -51,6 +51,7 @@ ruler:
 # 限制配置（防止性能问题）
 limits_config:
   # 查询限制
+  max_entries_limit_per_query: 100000
   max_query_length: 720h
   max_query_parallelism: 16
   max_query_series: 500

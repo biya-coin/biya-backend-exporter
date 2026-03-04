@@ -96,7 +96,11 @@ services:
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./configs/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
       - grafana-data:/var/lib/grafana
+    # 使 Grafana 能通过主机访问其他网络/主机上的 ClickHouse（需 ClickHouse 映射 8123 到主机）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false

@@ -60,24 +60,24 @@ groups:
             4. 评估是否需要替换验证者
 
       # 网络分叉告警
-      - alert: 网络分叉
-        expr: |
-          # 检测到链分叉（biya_chain_fork == 1 表示分叉）
-          biya_chain_fork == 1
-        for: 1m
-        labels:
-          severity: critical
-          category: reliability
-          subsystem: consensus
-        annotations:
-          summary: "检测到网络分叉"
-          description: "Explorer 和 Tendermint 节点的区块哈希不一致，可能存在严重共识问题"
-          处理建议: |
-            1. 立即通知技术团队
-            2. 分析分叉原因
-            3. 检查验证者投票情况
-            4. 对比多个节点的区块哈希确认分叉范围
-            5. 考虑暂停服务并协调修复
+      # - alert: 网络分叉
+      #   expr: |
+      #     # 检测到链分叉（biya_chain_fork == 1 表示分叉）
+      #     biya_chain_fork == 1
+      #   for: 1m
+      #   labels:
+      #     severity: critical
+      #     category: reliability
+      #     subsystem: consensus
+      #   annotations:
+      #     summary: "检测到网络分叉"
+      #     description: "Explorer 和 Tendermint 节点的区块哈希不一致，可能存在严重共识问题"
+      #     处理建议: |
+      #       1. 立即通知技术团队
+      #       2. 分析分叉原因
+      #       3. 检查验证者投票情况
+      #       4. 对比多个节点的区块哈希确认分叉范围
+      #       5. 考虑暂停服务并协调修复
 
   # ==========================================
   # 2. 节点相关告警
